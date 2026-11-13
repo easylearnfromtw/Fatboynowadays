@@ -10,8 +10,13 @@
 :root{--pink:#f6d6e6;--purple:#cdbbef;--yellow:#f5e8a8;--blue:#bfe3f4;--ink:#1a1a1a;--ivory:#fafaf7;--gold:#f5dfb7;--progress:0}
 *{box-sizing:border-box}html{scroll-behavior:auto}body{margin:0;color:#fff8ec;background:#242033;font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 button,a{-webkit-tap-highlight-color:transparent}button{font:inherit}.track{height:440svh;min-height:2300px;position:relative}.scene{position:sticky;top:0;width:100%;height:100svh;min-height:460px;overflow:hidden;isolation:isolate;background:#a99bc5;touch-action:pan-y}
-.world,.clouds,.architecture{position:absolute;inset:0;pointer-events:none}.world{will-change:transform;transform-origin:50% 55%;backface-visibility:hidden;transform:translate3d(0,0,0) scale(1)}.world svg,.clouds svg,.architecture svg{height:100%;width:100%;display:block;object-fit:cover}
-.world svg{min-width:100%;min-height:100%}.world img{display:block;width:100%;height:100%;object-fit:cover;object-position:center center;user-select:none;-webkit-user-drag:none;pointer-events:none}.clouds{opacity:0;will-change:transform,opacity;transform-origin:50% 58%}.architecture{opacity:0;will-change:transform,opacity}
+.world,.architecture{position:absolute;inset:0;pointer-events:none}
+.world{will-change:transform;transform-origin:50% 55%;backface-visibility:hidden;transform:translate3d(0,0,0) scale(1)}
+.world img{display:block;width:100%;height:100%;object-fit:cover;object-position:center center;user-select:none;-webkit-user-drag:none;pointer-events:none}
+.architecture{opacity:0;will-change:transform,opacity}
+.cloud-band{position:absolute;left:50%;width:155vw;max-width:none;height:auto;opacity:0;pointer-events:none;will-change:transform,opacity;backface-visibility:hidden;transform-origin:50% 50%;transform:translate3d(-50%,-50%,0) scale(1)}
+.cloud-band img{display:block;width:100%;height:auto;max-width:none;user-select:none;-webkit-user-drag:none;pointer-events:none}
+.cloud-back{top:56%}.cloud-mid{top:66%}.cloud-front{top:77%}
 .skyshade{position:absolute;inset:0;background:linear-gradient(180deg,#21193155 0%,transparent 28%,#25203c0b 53%,#1e183b8d 100%);pointer-events:none}.vignette{position:absolute;inset:0;box-shadow:inset 0 0 100px #38274428;pointer-events:none}
 @keyframes breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}@keyframes nod{0%,100%{transform:rotate(0)}45%{transform:rotate(3deg)}70%{transform:rotate(-1deg)}}@keyframes page{0%,13%,90%,100%{transform:scaleX(1)}45%,55%{transform:scaleX(-.8)}}@keyframes hair{0%,100%{transform:rotate(0deg) translateX(0)}50%{transform:rotate(5deg) translateX(7px)}}@keyframes wander{0%,100%{transform:translateX(0)}50%{transform:translateX(13px)}}@keyframes floaty{0%,100%{transform:translate(0,0) rotate(0deg)}50%{transform:translate(15px,17px) rotate(25deg)}}@keyframes glow{50%{opacity:.7}}
 #spirit{animation:breathe 6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}#spiritHair{animation:hair 5.2s ease-in-out infinite;transform-box:fill-box;transform-origin:25% 50%}#readerHead{animation:nod 5s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}#readerPage{animation:page 7s ease-in-out infinite;transform-box:fill-box;transform-origin:100% 50%}#walker{animation:wander 11s ease-in-out infinite}#lampGlow{animation:glow 4s ease-in-out infinite}.petal{position:absolute;z-index:2;width:9px;height:14px;border-radius:80% 4% 80% 4%;background:linear-gradient(45deg,#fff9f1,#f8d3ef);opacity:.6;left:var(--x);top:var(--y);animation:floaty var(--duration) ease-in-out infinite alternate;animation-delay:var(--delay);pointer-events:none}
@@ -23,8 +28,8 @@ header{position:absolute;z-index:15;top:0;left:0;right:0;display:flex;justify-co
 .scroll-hint{position:absolute;bottom:max(25px,env(safe-area-inset-bottom));left:0;right:0;display:flex;justify-content:center;align-items:center;gap:9px;z-index:16;pointer-events:none;color:#fff4dd;font-size:12px;letter-spacing:.12em;text-shadow:0 2px 10px #1e1a32}.scroll-hint svg{animation:breathe 1.7s ease-in-out infinite}
 .rail{position:absolute;z-index:12;right:clamp(19px,4vw,55px);top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:14px;pointer-events:none}.rail span{display:block;width:5px;height:5px;border:1px solid #fff7e7aa;border-radius:50%;transition:background .15s,scale .15s}.rail span.active{scale:1.65;background:#fff4d0}
 .lower{background:linear-gradient(180deg,#251e36,#30253e 35%,#f8f3f4 100%);padding:120px 22px 125px;text-align:center}.lower-inner{max-width:920px;margin:auto}.lower .tag{font-size:12px;letter-spacing:.3em;color:#efdbbb}.lower h2{font-family:"Songti TC","Noto Serif TC",serif;font-size:clamp(33px,5vw,56px);font-weight:500;line-height:1.45;letter-spacing:.09em;margin:20px 0 20px}.lower .lead{font-size:15px;line-height:2.1;color:#ece4ee;max-width:660px;margin:0 auto 50px}.eras{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;text-align:left}.era{background:#ffffff0b;border:1px solid #ffffff29;border-radius:16px;padding:24px 20px 28px;min-height:175px;backdrop-filter:blur(5px)}.era .n{font-size:11px;color:#eacb9e;letter-spacing:.18em}.era h3{font-family:"Songti TC",serif;font-size:20px;letter-spacing:.04em;font-weight:500;margin:18px 0 8px}.era p{font-size:12px;color:#e2d8e6;line-height:1.9;margin:0}.end{font-family:"Songti TC",serif;color:#372c48;margin:115px auto 0;font-size:clamp(23px,4vw,36px);letter-spacing:.13em}.end small{display:block;color:#746780;letter-spacing:.14em;margin-top:20px;font:13px/1.9 -apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif}.restart{margin-top:28px;border:1px solid #9785ac;color:#473653;background:transparent;padding:12px 26px;border-radius:999px;cursor:pointer;letter-spacing:.08em}.restart:hover{background:#ebe1f3}
-@media(max-width:760px){.track{height:390svh;min-height:1750px}.scene{min-height:0}.world svg,.clouds svg,.architecture svg{width:160%;height:100%;max-width:none;margin-left:-30%}.headline{font-size:clamp(26px,7.5vw,36px)}.copy{bottom:clamp(72px,12vh,105px)}.description{max-width:310px}.eras{grid-template-columns:repeat(2,1fr)}.era{min-height:166px}.brand-caption{font-size:8px}.rail{right:18px}}
-@media(max-width:450px){.eras{grid-template-columns:1fr}.era{min-height:115px}.lower{padding-top:80px}.world svg,.clouds svg,.architecture svg{width:185%;margin-left:-42.5%}}
+@media(max-width:760px){.track{height:390svh;min-height:1750px}.scene{min-height:0}.world img{width:160%;height:100%;max-width:none;margin-left:-30%}.cloud-band{width:215vw}.headline{font-size:clamp(26px,7.5vw,36px)}.copy{bottom:clamp(72px,12vh,105px)}.description{max-width:310px}.eras{grid-template-columns:repeat(2,1fr)}.era{min-height:166px}.brand-caption{font-size:8px}.rail{right:18px}}
+@media(max-width:450px){.eras{grid-template-columns:1fr}.era{min-height:115px}.lower{padding-top:80px}.world img{width:185%;margin-left:-42.5%}.cloud-band{width:250vw}}
 @media(prefers-reduced-motion:reduce){#spirit,#spiritHair,#readerHead,#readerPage,#walker,#lampGlow,.petal,.scroll-hint svg{animation:none!important}.rail span{transition:none}}
 </style>
 </head>
@@ -34,16 +39,9 @@ header{position:absolute;z-index:15;top:0;left:0;right:0;display:flex;justify-co
   <div class="world" id="world" aria-hidden="true">
     <img src="assets/original-stage.webp" alt="" draggable="false" decoding="async" fetchpriority="high">
   </div>
-    <div class="clouds" id="clouds" aria-hidden="true">
-    <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-      <defs><radialGradient id="mist" cx=".5" cy=".5" r=".6"><stop stop-color="#fffaf0" stop-opacity=".95"/><stop offset=".6" stop-color="#f9e6f5" stop-opacity=".8"/><stop offset="1" stop-color="#f9e6f5" stop-opacity="0"/></radialGradient></defs>
-      <ellipse cx="330" cy="665" rx="470" ry="270" fill="url(#mist)"/>
-      <ellipse cx="1208" cy="495" rx="520" ry="290" fill="url(#mist)"/>
-      <ellipse cx="830" cy="836" rx="690" ry="244" fill="url(#mist)"/>
-      <path d="M-80 695Q140 499 341 670Q508 469 712 642Q872 410 1109 575Q1374 415 1680 621V970H-80Z" fill="#fff5f1" opacity=".55"/>
-      <path d="M-80 858Q193 652 402 788Q639 618 832 780Q1080 615 1255 790Q1477 610 1680 766V980H-80Z" fill="#eacff5" opacity=".62"/>
-    </svg>
-  </div>
+    <div class="cloud-band cloud-back" id="cloud-back" aria-hidden="true"><img src="assets/cloud-back.webp" alt="" draggable="false" decoding="async"></div>
+  <div class="cloud-band cloud-mid" id="cloud-mid" aria-hidden="true"><img src="assets/cloud-mid.webp" alt="" draggable="false" decoding="async"></div>
+  <div class="cloud-band cloud-front" id="cloud-front" aria-hidden="true"><img src="assets/cloud-front.webp" alt="" draggable="false" decoding="async"></div>
   <div class="architecture" id="architecture" aria-hidden="true"></div>
     <div class="petal" style="--x:16%;--y:26%;--duration:7s;--delay:-2s"></div>
   <div class="petal" style="--x:80%;--y:33%;--duration:8s;--delay:-4s"></div>
@@ -53,7 +51,7 @@ header{position:absolute;z-index:15;top:0;left:0;right:0;display:flex;justify-co
   <div class="rail" aria-hidden="true"><span class="active"></span><span></span><span></span></div>
   <div class="copy" aria-live="off">
     <div class="card" id="card0"><div class="eyebrow">PROLOGUE · THE AGES</div><div class="headline">故事，從千年前開始。</div><div class="description">食物、身體與時間。無數人的旅程，在同一片天空下交會。</div></div>
-    <div class="card" id="card1"><div class="eyebrow">INTERLUDE · THROUGH THE CLOUDS</div><div class="headline">雲霧散去，視野逐漸展開。</div><div class="description">鏡頭持續向外拉遠，時間跟著你的指尖前進。</div></div>
+    <div class="card" id="card1"><div class="eyebrow">INTERLUDE · THROUGH THE RIBBON CLOUDS</div><div class="headline">穿過雲帶，視野逐漸展開。</div><div class="description">向上滑動，雲與時間一起後退，舞台慢慢浮現。</div></div>
     <div class="card" id="card2"><div class="eyebrow">THE REVEAL · THE STAGE</div><div class="headline">舞台展開，故事開始。</div><div class="description">視野繼續向外延伸，窗框與桌面最後才現身。</div></div>
   </div>
   <div class="scroll-hint" id="hint"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 4v16m-6-6 6 6 6-6"/></svg>上下滑動 · 控制鏡頭與時間</div>
@@ -73,7 +71,8 @@ header{position:absolute;z-index:15;top:0;left:0;right:0;display:flex;justify-co
 <script>
 (function(){
  'use strict';
- const track=document.getElementById('track'),world=document.getElementById('world'),clouds=document.getElementById('clouds'),architecture=document.getElementById('architecture');
+ const track=document.getElementById('track'),world=document.getElementById('world'),architecture=document.getElementById('architecture');
+ const cloudBack=document.getElementById('cloud-back'),cloudMid=document.getElementById('cloud-mid'),cloudFront=document.getElementById('cloud-front');
  const cards=[...document.querySelectorAll('.card')],dots=[...document.querySelectorAll('.rail span')],bar=document.getElementById('bar'),number=document.getElementById('number'),hint=document.getElementById('hint');
  const clamp=(x)=>Math.max(0,Math.min(1,x));const ease=(x)=>{x=clamp(x);return x*x*(3-2*x)};
  const lerp=(a,b,t)=>a+(b-a)*t;let queued=false;
@@ -89,11 +88,18 @@ header{position:absolute;z-index:15;top:0;left:0;right:0;display:flex;justify-co
   else if(p<.72){scale=lerp(1.98,1.72,(p-.34)/.38)}
   else{scale=lerp(1.72,1.0,(p-.72)/.28)}
   world.style.transform='translate3d(0,0,0) scale('+scale.toFixed(4)+')';
-  // Clouds drift sideways and shrink as the field of view opens outward.
-  const mist=ease((p-.27)/.16)*(1-ease((p-.60)/.26));
-  clouds.style.opacity=(mist*.91).toFixed(3);
-  const cloudScale=lerp(1.66,1.0,p);
-  clouds.style.transform='translate3d('+lerp(-4,5,p).toFixed(2)+'%,'+lerp(5,-6,p).toFixed(2)+'%,0) scale('+cloudScale.toFixed(3)+')';
+  // Transparent lavender / blush / gold ribbon-cloud artwork, each layer moving
+  // a different distance. Motion and opacity are determined ONLY by scroll position.
+  const cp=clamp((p-.34)/.38);
+  const bandFade=(on,full,hold,off)=>ease((p-on)/(full-on))*(1-ease((p-hold)/(off-hold)));
+  const animateBand=(el,startX,endX,startY,endY,startScale,endScale,opacity)=>{
+    const x=lerp(startX,endX,cp),y=lerp(startY,endY,cp),s=lerp(startScale,endScale,cp);
+    el.style.opacity=opacity.toFixed(3);
+    el.style.transform='translate3d(calc(-50% + '+x.toFixed(2)+'%),calc(-50% + '+y.toFixed(2)+'%),0) scale('+s.toFixed(4)+')';
+  };
+  animateBand(cloudBack,-2,3,2,-2,1.10,1.0,.57*bandFade(.29,.42,.62,.82));
+  animateBand(cloudMid,-6,8,5,-3,1.20,1.0,.75*bandFade(.32,.46,.62,.81));
+  animateBand(cloudFront,-12,15,10,-6,1.28,1.0,.94*bandFade(.35,.49,.61,.79));
   // The approved original picture includes the stage frame and tabletop; cropping hides them until the final pullback.
   const reveal=ease((p-.72)/.24);
   architecture.style.opacity=reveal.toFixed(3);
