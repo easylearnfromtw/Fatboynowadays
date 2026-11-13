@@ -5,10 +5,10 @@ A scroll-driven, original 2D shadow-puppet storytelling website about humanity's
 ## Live site
 When GitHub Pages is enabled, visit https://easylearnfromtw.github.io/Fatboynowadays/
 
-## Current stage · v0.4
+## Current stage · v0.5
 - **Act I:** no window or desk; layered historical scene and gentle looping character movements.
-- **Act II:** the camera keeps pulling back through three newly approved paper-cut shadow-theatre ribbon cloud assets (back, mid, front), each with independent scroll-driven parallax.
-- **Act III:** the camera keeps pulling back; the theatre window, lanterns, and tabletop enter only at the end.
+- **Act II:** two approved cut-paper shadow-theatre panels enter from the left and right, gather at centre and pause there; all motion follows native scroll, including reverse movement.
+- **Act III:** the two paper-cut panels retreat toward their respective sides while the camera continues pulling out, revealing the entire original theatre image.
 - Native vertical scrolling controls one continuous outward camera pullback across all three acts: drag/scroll forward or backward; no GIF frame stepping, reverse zoom or mandatory autoplay.
 - Responsive mobile-first layout, no frameworks, no external fonts, no backend, and no build process.
 - Original approved theatre illustration is used for the background. This is still a static artwork; individual character rigging, page turning, nodding, and hair animation are future enhancements.
@@ -38,3 +38,10 @@ Scene and character artwork are iterated one by one after review. The original s
 - `assets/cloud-front.webp`: elaborate gold-edged paper-cut foreground cloud, derived from 華麗金邊雲山剪紙長卷
 
 The original painted stage remains unchanged. These are real transparent WebP image layers rather than mist/fog or GIF frames. Cloud movements track scroll progress and reverse when scrolling upward. The cloud imagery is decorative; historically accurate shadow-puppet character articulation will be developed separately.
+
+## Approved side-curtain assets (v0.5)
+
+- `assets/curtain-left.webp` — original pastel lilac / blush / embossed-gold left paper-cut puppet scenery with cloud, lantern and floral motifs.
+- `assets/curtain-right.webp` — complementary right paper-cut scenery, designed to extend toward the centre.
+- In Act II, the paired scenery panels converge from opposite sides (`p=.34–.64`) and stay gathered until `p=.72`; in Act III (`p=.72–.96`) they withdraw to reveal the complete stage. Scroll position is the sole animation clock, so the panels stop with the finger and reverse on upward scrolling.
+- Prior three long ribbon-cloud image assets are retained in the repository for comparison and rollback, but are no longer rendered on the page.
