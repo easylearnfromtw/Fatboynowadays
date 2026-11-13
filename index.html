@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#251e36">
+<meta name="description" content="《千年之重》— 一場從人類減重史走向個人生命故事的互動皮影戲。">
+<title>千年之重｜Fatboy Nowadays</title>
+<style>
+:root{--pink:#f6d6e6;--purple:#cdbbef;--yellow:#f5e8a8;--blue:#bfe3f4;--ink:#1a1a1a;--ivory:#fafaf7;--gold:#f5dfb7;--progress:0}
+*{box-sizing:border-box}html{scroll-behavior:auto}body{margin:0;color:#fff8ec;background:#242033;font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button,a{-webkit-tap-highlight-color:transparent}button{font:inherit}.track{height:440svh;min-height:2300px;position:relative}.scene{position:sticky;top:0;width:100%;height:100svh;min-height:460px;overflow:hidden;isolation:isolate;background:#a99bc5;touch-action:pan-y}
+.world,.clouds,.architecture{position:absolute;inset:0;pointer-events:none}.world{will-change:transform;transform-origin:50% 55%;backface-visibility:hidden;transform:translate3d(0,0,0) scale(1)}.world svg,.clouds svg,.architecture svg{height:100%;width:100%;display:block;object-fit:cover}
+.world svg{min-width:100%;min-height:100%}.clouds{opacity:0;will-change:transform,opacity;transform-origin:50% 58%}.architecture{opacity:0;will-change:transform,opacity}
+.skyshade{position:absolute;inset:0;background:linear-gradient(180deg,#21193155 0%,transparent 28%,#25203c0b 53%,#1e183b8d 100%);pointer-events:none}.vignette{position:absolute;inset:0;box-shadow:inset 0 0 100px #38274428;pointer-events:none}
+@keyframes breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}@keyframes nod{0%,100%{transform:rotate(0)}45%{transform:rotate(3deg)}70%{transform:rotate(-1deg)}}@keyframes page{0%,13%,90%,100%{transform:scaleX(1)}45%,55%{transform:scaleX(-.8)}}@keyframes hair{0%,100%{transform:rotate(0deg) translateX(0)}50%{transform:rotate(5deg) translateX(7px)}}@keyframes wander{0%,100%{transform:translateX(0)}50%{transform:translateX(13px)}}@keyframes floaty{0%,100%{transform:translate(0,0) rotate(0deg)}50%{transform:translate(15px,17px) rotate(25deg)}}@keyframes glow{50%{opacity:.7}}
+#spirit{animation:breathe 6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}#spiritHair{animation:hair 5.2s ease-in-out infinite;transform-box:fill-box;transform-origin:25% 50%}#readerHead{animation:nod 5s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}#readerPage{animation:page 7s ease-in-out infinite;transform-box:fill-box;transform-origin:100% 50%}#walker{animation:wander 11s ease-in-out infinite}#lampGlow{animation:glow 4s ease-in-out infinite}.petal{position:absolute;z-index:2;width:9px;height:14px;border-radius:80% 4% 80% 4%;background:linear-gradient(45deg,#fff9f1,#f8d3ef);opacity:.6;left:var(--x);top:var(--y);animation:floaty var(--duration) ease-in-out infinite alternate;animation-delay:var(--delay);pointer-events:none}
+header{position:absolute;z-index:15;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:start;gap:16px;padding:max(23px,env(safe-area-inset-top)) clamp(20px,4.2vw,68px) 16px;pointer-events:none;text-shadow:0 2px 12px #28213ba0}
+.brand{font-family:"Songti TC","Noto Serif TC",serif;font-size:clamp(18px,2.4vw,26px);letter-spacing:.2em;font-weight:600}.brand-caption{font-size:10px;margin-top:8px;letter-spacing:.2em;opacity:.85}
+.status{display:flex;align-items:center;gap:10px;font-size:11px;letter-spacing:.13em;padding-top:7px;font-variant-numeric:tabular-nums}.bar{height:2px;width:clamp(66px,10vw,138px);background:#fff8eb55;border-radius:5px;overflow:hidden}.bar-inner{height:100%;width:100%;background:#fff6cc;transform:scaleX(0);transform-origin:left;will-change:transform}
+.copy{position:absolute;z-index:10;bottom:clamp(68px,12vh,150px);left:18px;right:18px;height:180px;display:grid;place-items:center;pointer-events:none;text-align:center;text-shadow:0 3px 20px #241d3799}
+.card{position:absolute;display:flex;align-items:center;flex-direction:column;gap:13px;max-width:760px;width:100%;opacity:0;will-change:opacity,transform;transform:translate3d(0,10px,0)}.card:first-child{opacity:1}.eyebrow{font-size:11px;font-weight:600;letter-spacing:.32em;color:#fff1be}.headline{font-family:"Songti TC","Noto Serif TC",serif;font-size:clamp(30px,5.4vw,58px);letter-spacing:.16em;font-weight:500;line-height:1.36}.description{font-size:clamp(12px,1.5vw,15px);line-height:1.9;letter-spacing:.09em;opacity:.92}
+.scroll-hint{position:absolute;bottom:max(25px,env(safe-area-inset-bottom));left:0;right:0;display:flex;justify-content:center;align-items:center;gap:9px;z-index:16;pointer-events:none;color:#fff4dd;font-size:12px;letter-spacing:.12em;text-shadow:0 2px 10px #1e1a32}.scroll-hint svg{animation:breathe 1.7s ease-in-out infinite}
+.rail{position:absolute;z-index:12;right:clamp(19px,4vw,55px);top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:14px;pointer-events:none}.rail span{display:block;width:5px;height:5px;border:1px solid #fff7e7aa;border-radius:50%;transition:background .15s,scale .15s}.rail span.active{scale:1.65;background:#fff4d0}
+.lower{background:linear-gradient(180deg,#251e36,#30253e 35%,#f8f3f4 100%);padding:120px 22px 125px;text-align:center}.lower-inner{max-width:920px;margin:auto}.lower .tag{font-size:12px;letter-spacing:.3em;color:#efdbbb}.lower h2{font-family:"Songti TC","Noto Serif TC",serif;font-size:clamp(33px,5vw,56px);font-weight:500;line-height:1.45;letter-spacing:.09em;margin:20px 0 20px}.lower .lead{font-size:15px;line-height:2.1;color:#ece4ee;max-width:660px;margin:0 auto 50px}.eras{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;text-align:left}.era{background:#ffffff0b;border:1px solid #ffffff29;border-radius:16px;padding:24px 20px 28px;min-height:175px;backdrop-filter:blur(5px)}.era .n{font-size:11px;color:#eacb9e;letter-spacing:.18em}.era h3{font-family:"Songti TC",serif;font-size:20px;letter-spacing:.04em;font-weight:500;margin:18px 0 8px}.era p{font-size:12px;color:#e2d8e6;line-height:1.9;margin:0}.end{font-family:"Songti TC",serif;color:#372c48;margin:115px auto 0;font-size:clamp(23px,4vw,36px);letter-spacing:.13em}.end small{display:block;color:#746780;letter-spacing:.14em;margin-top:20px;font:13px/1.9 -apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif}.restart{margin-top:28px;border:1px solid #9785ac;color:#473653;background:transparent;padding:12px 26px;border-radius:999px;cursor:pointer;letter-spacing:.08em}.restart:hover{background:#ebe1f3}
+@media(max-width:760px){.track{height:390svh;min-height:1750px}.scene{min-height:0}.world svg,.clouds svg,.architecture svg{width:160%;height:100%;max-width:none;margin-left:-30%}.headline{font-size:clamp(26px,7.5vw,36px)}.copy{bottom:clamp(72px,12vh,105px)}.description{max-width:310px}.eras{grid-template-columns:repeat(2,1fr)}.era{min-height:166px}.brand-caption{font-size:8px}.rail{right:18px}}
+@media(max-width:450px){.eras{grid-template-columns:1fr}.era{min-height:115px}.lower{padding-top:80px}.world svg,.clouds svg,.architecture svg{width:185%;margin-left:-42.5%}}
+@media(prefers-reduced-motion:reduce){#spirit,#spiritHair,#readerHead,#readerPage,#walker,#lampGlow,.petal,.scroll-hint svg{animation:none!important}.rail span{transition:none}}
+</style>
+</head>
+<body>
+<div class="track" id="track">
+<main class="scene" aria-label="可透過上下滑動控制的三幕皮影戲開場">
+  <div class="world" id="world" aria-hidden="true">
+  <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="sky" x1="0" y1="0" x2="0.5" y2="1"><stop stop-color="#8e83bc"/><stop offset=".47" stop-color="#d0b4de"/><stop offset=".82" stop-color="#ffe2ca"/><stop offset="1" stop-color="#b69bc4"/></linearGradient>
+      <radialGradient id="moon" cx=".5" cy=".48" r=".55"><stop stop-color="#fff9e9"/><stop offset=".49" stop-color="#fff1dd"/><stop offset=".85" stop-color="#f9dfdc" stop-opacity=".7"/><stop offset="1" stop-color="#fff4de" stop-opacity="0"/></radialGradient>
+      <linearGradient id="mount" x1=".1" y1="0" x2=".8" y2="1"><stop stop-color="#bbadcb"/><stop offset="1" stop-color="#7f79ab"/></linearGradient>
+      <linearGradient id="water" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#edd6ed"/><stop offset="1" stop-color="#917ead"/></linearGradient>
+      <filter id="soft"><feGaussianBlur stdDeviation="16"/></filter>
+      <filter id="tiny"><feGaussianBlur stdDeviation="3"/></filter>
+    </defs>
+    <rect width="1600" height="900" fill="url(#sky)"/>
+    <circle cx="801" cy="340" r="284" fill="#fff6dd" opacity=".4" filter="url(#soft)"/>
+    <circle cx="801" cy="340" r="255" fill="url(#moon)"/>
+    <circle cx="801" cy="340" r="220" fill="none" stroke="#fff6dc" stroke-width="2" opacity=".55"/>
+    <circle cx="801" cy="340" r="236" fill="none" stroke="#ffefcd" stroke-width="1" stroke-dasharray="3 18" opacity=".5"/>
+    <g fill="#fff5db" opacity=".8">
+      <path d="M340 185l6 20 20 6-20 6-6 20-6-20-20-6 20-6z"/>
+      <path d="M1127 200l5 15 15 5-15 5-5 15-5-15-15-5 15-5z"/>
+      <path d="M456 327l4 12 12 4-12 4-4 12-4-12-12-4 12-4z"/>
+      <circle cx="1041" cy="121" r="3"/><circle cx="230" cy="92" r="3"/><circle cx="1350" cy="270" r="4"/>
+    </g>
+    <path d="M0 497Q165 361 313 454T618 462Q782 336 944 433T1252 419Q1426 321 1600 446V805H0Z" fill="#d5bcd5" opacity=".55"/>
+    <path d="M0 520L136 401 229 466 335 337 459 489 603 383 751 507 874 391 1024 503 1191 359 1371 479 1514 370 1600 449V900H0Z" fill="url(#mount)" opacity=".56"/>
+    <path d="M0 650Q144 547 283 606T590 583Q790 503 954 588T1300 558Q1468 495 1600 606V900H0Z" fill="#957fae" opacity=".62"/>
+    <g fill="#6c648c" opacity=".52">
+      <path d="M182 539v-102h-26l40-27 40 27h-27v102zM145 482h100v10H145z"/>
+      <path d="M227 513v-71h-18l28-22 28 22h-18v71z"/>
+      <path d="M268 539v-132h-28l43-27 43 27h-28v132z"/>
+      <path d="M1280 548v-150h70v150zM1270 396h90l-45-55zM1380 550v-107h53v107zM1374 440h64l-32-54zM1456 550v-184h45v184zM1444 368h68l-34-58z"/>
+    </g>
+    <path d="M0 590C230 568 352 643 557 598S880 558 1091 606 1414 565 1600 586V900H0Z" fill="url(#water)" opacity=".67"/>
+    <g fill="#f7dfed" opacity=".85"><ellipse cx="293" cy="625" rx="215" ry="31"/><ellipse cx="1130" cy="605" rx="270" ry="38"/><ellipse cx="795" cy="647" rx="240" ry="33"/></g>
+    <g id="spirit" opacity=".47" fill="#d5b7d7" stroke="#c5a9ca" stroke-width="3">
+      <path d="M738 385Q711 408 682 467Q650 491 631 525Q712 510 753 483Q820 500 913 518Q885 458 850 422L833 384Z"/>
+      <ellipse cx="788" cy="302" rx="66" ry="88"/>
+      <path d="M722 285Q709 224 750 219Q775 183 817 206Q878 212 861 296Q852 264 829 247Q769 268 722 285Z"/>
+      <path d="M725 302Q702 325 669 332Q699 356 740 333Z"/>
+      <g id="spiritHair">
+        <path d="M736 238Q680 222 638 257Q579 261 541 239Q573 295 647 293Q714 277 751 254Z" opacity=".86"/>
+        <path d="M724 266Q630 298 566 355Q644 333 733 303Z" opacity=".68"/>
+      </g>
+      <path d="M754 376Q789 389 833 374L862 447Q805 460 704 448Z" fill="#dac2d9"/>
+      <path d="M744 316Q763 334 786 323" stroke="#b396bb" fill="none" stroke-width="2"/>
+    </g>
+    <g fill="#544c6b" stroke="#544c6b" stroke-linecap="round" opacity=".85">
+      <g transform="translate(329 571)"><circle cx="0" cy="-37" r="23"/><path d="M-23-8Q0-22 24-8L31 96H-37Z"/><path d="M-6 57L-11 123M16 57L25 123" stroke-width="9"/><path d="M-17-4L-45 45M20-4L49 42" stroke-width="10"/></g>
+      <g transform="translate(601 585)">
+        <g id="readerHead"><circle cx="0" cy="-60" r="21"/><path d="M-25-76Q-2-110 17-76Z"/></g>
+        <path d="M-28-34Q-3-47 32-33L40 104H-46Z"/>
+        <path d="M-24-23L-45 30M28-25L48 27" stroke-width="11"/>
+        <path d="M-10 4Q18-7 43 6L42 38Q14 26-10 40Z" fill="#edcfce" stroke="#806887" stroke-width="3"/>
+        <path id="readerPage" d="M15 7Q27 1 42 6V39Q29 33 15 35Z" fill="#ffeddd" stroke="#806887" stroke-width="2"/>
+      </g>
+      <g transform="translate(975 571)"><circle cx="0" cy="-38" r="23"/><path d="M-23-64l24-29 23 29Z"/><path d="M-31-8Q0-22 31-8L38 113H-38Z"/><path d="M-18-2L-49 57M21-4L52 56" stroke-width="11"/><path d="M29 20l44-12 3 40-44 11Z" fill="#f9e8d6" stroke="#544c6b" stroke-width="3"/></g>
+      <g id="walker" transform="translate(1230 570)"><circle cx="0" cy="-50" r="22"/><path d="M-19-22Q1-31 19-22L28 49H-27Z"/><path d="M-15 45L-40 126M17 44L34 124" stroke-width="12"/><path d="M-16-9L-49 24M17-9L39 25" stroke-width="10"/><path d="M16-76q44-25 39-5q-14 12-38 9" stroke-width="9" fill="none"/></g>
+    </g>
+    <g fill="#f5d7e7" stroke="#f8e5cf" stroke-width="3">
+      <path d="M0 698Q175 618 343 706T674 690Q856 602 1052 694T1385 678Q1493 623 1600 681V900H0Z"/>
+      <path d="M0 759Q183 667 361 758T712 751Q886 664 1031 748T1347 744Q1492 677 1600 734V900H0Z" fill="#b9a0d1"/>
+      <path d="M0 817Q244 739 448 823T896 801Q1129 735 1350 817T1600 801V900H0Z" fill="#9686b8"/>
+    </g>
+    <g stroke="#fff2d3" stroke-width="2" fill="none" opacity=".7"><path d="M-40 738Q218 640 400 741T835 711Q1098 642 1380 734T1660 700"/><path d="M0 787Q300 687 515 788T950 774Q1255 704 1600 774"/></g>
+  </svg>
+  </div>
+  <div class="clouds" id="clouds" aria-hidden="true">
+    <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <defs><radialGradient id="mist" cx=".5" cy=".5" r=".6"><stop stop-color="#fffaf0" stop-opacity=".95"/><stop offset=".6" stop-color="#f9e6f5" stop-opacity=".8"/><stop offset="1" stop-color="#f9e6f5" stop-opacity="0"/></radialGradient></defs>
+      <ellipse cx="330" cy="665" rx="470" ry="270" fill="url(#mist)"/>
+      <ellipse cx="1208" cy="495" rx="520" ry="290" fill="url(#mist)"/>
+      <ellipse cx="830" cy="836" rx="690" ry="244" fill="url(#mist)"/>
+      <path d="M-80 695Q140 499 341 670Q508 469 712 642Q872 410 1109 575Q1374 415 1680 621V970H-80Z" fill="#fff5f1" opacity=".55"/>
+      <path d="M-80 858Q193 652 402 788Q639 618 832 780Q1080 615 1255 790Q1477 610 1680 766V980H-80Z" fill="#eacff5" opacity=".62"/>
+    </svg>
+  </div>
+  <div class="architecture" id="architecture" aria-hidden="true">
+    <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="wood" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#44314e"/><stop offset=".4" stop-color="#796081"/><stop offset=".65" stop-color="#5d456d"/><stop offset="1" stop-color="#34253f"/></linearGradient><radialGradient id="lantern"><stop stop-color="#fffae8"/><stop offset=".7" stop-color="#f6d8bf"/><stop offset="1" stop-color="#f9cda6"/></radialGradient></defs>
+      <path d="M0 0H1600V59H0Z" fill="#3b2b4a"/><path d="M0 43H1600V72H0Z" fill="#725779" stroke="#c5a1ad" stroke-width="4"/>
+      <path d="M0 0H106V900H0ZM1494 0H1600V900H1494Z" fill="url(#wood)" stroke="#d0b08c" stroke-width="8"/>
+      <path d="M124 0H1476V24H124Z" fill="#4e3858"/>
+      <g fill="#e2bfa7" opacity=".9"><path d="M340 0L380 40 420 0Z"/><path d="M1180 0L1220 40 1260 0Z"/><path d="M715 0l85 55 85-55-85 92Z" fill="#ad87a9" stroke="#efc9a5" stroke-width="5"/></g>
+      <g transform="translate(154 72)"><path d="M-48 0H48L43 100Q0 126-43 100Z" fill="url(#lantern)" stroke="#79556b" stroke-width="7"/><path d="M-40 17H40M-43 83H43M0 0V115" stroke="#caa889" stroke-width="4"/><circle cx="0" cy="52" r="86" fill="#fff2ce" opacity=".18" id="lampGlow"/></g>
+      <g transform="translate(1446 72)"><path d="M-48 0H48L43 100Q0 126-43 100Z" fill="url(#lantern)" stroke="#79556b" stroke-width="7"/><path d="M-40 17H40M-43 83H43M0 0V115" stroke="#caa889" stroke-width="4"/></g>
+      <path d="M0 772H1600V900H0Z" fill="#60425a"/><path d="M0 767H1600V783H0Z" fill="#d3a78f"/><path d="M0 800H1600V817H0Z" fill="#8d6b77"/>
+      <path d="M110 826Q800 780 1490 826V900H110Z" fill="#987a8d" opacity=".46"/>
+      <g transform="translate(250 762)"><path d="M-92-7H108L122 58H-101Z" fill="#4b3a60" stroke="#c9a3a4" stroke-width="5"/><path d="M-83 6H94L102 38H-89Z" fill="#7b6086"/><path d="M52-30L154-20L144 22L45 12Z" fill="#f9e9db" stroke="#b88d96" stroke-width="4"/><path d="M45-8Q95-18 138 5" fill="none" stroke="#b88d96" stroke-width="3"/></g>
+      <g transform="translate(1360 780)"><path d="M-55 24Q-20-100 41-77Q88-40 56 19" fill="none" stroke="#ae8b87" stroke-width="11"/><circle cx="-6" cy="-29" r="18" fill="#eec7ab"/><path d="M-17-39l22 24-21-1 20-24" fill="none" stroke="#81677c" stroke-width="3"/><path d="M-88 16H104V35H-88Z" fill="#47314d"/></g>
+    </svg>
+  </div>
+  <div class="petal" style="--x:16%;--y:26%;--duration:7s;--delay:-2s"></div>
+  <div class="petal" style="--x:80%;--y:33%;--duration:8s;--delay:-4s"></div>
+  <div class="petal" style="--x:28%;--y:68%;--duration:6s;--delay:-1s"></div>
+  <div class="skyshade"></div><div class="vignette"></div>
+  <header><div><div class="brand">千年之重</div><div class="brand-caption">FATBOY NOWADAYS · SHADOW TALE</div></div><div class="status"><span id="number">01 / 03</span><span class="bar"><span class="bar-inner" id="bar"></span></span></div></header>
+  <div class="rail" aria-hidden="true"><span class="active"></span><span></span><span></span></div>
+  <div class="copy" aria-live="off">
+    <div class="card" id="card0"><div class="eyebrow">PROLOGUE · THE AGES</div><div class="headline">故事，從千年前開始。</div><div class="description">食物、身體與時間。無數人的旅程，在同一片天空下交會。</div></div>
+    <div class="card" id="card1"><div class="eyebrow">INTERLUDE · THROUGH THE CLOUDS</div><div class="headline">穿過流雲，走向下一幕。</div><div class="description">向下滑動，時間會跟著你的指尖前進。</div></div>
+    <div class="card" id="card2"><div class="eyebrow">THE REVEAL · THE STAGE</div><div class="headline">帷幕升起，故事開始。</div><div class="description">窗與桌子最後才現身，舞台逐漸成形。</div></div>
+  </div>
+  <div class="scroll-hint" id="hint"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 4v16m-6-6 6 6 6-6"/></svg>上下滑動 · 控制鏡頭與時間</div>
+</main>
+</div>
+<section class="lower" id="history" aria-label="歷史序章">
+ <div class="lower-inner"><div class="tag">CHAPTER 01 · A HISTORY OF WEIGHT</div><h2>在成為我的故事以前，<br>先聽聽人類的故事。</h2>
+ <p class="lead">從古代的養生觀念、十九世紀的節食實踐，到熱量計算與現代醫學。每一個時代，都試著用自己的方式理解體重。這個互動序幕將逐步延伸為完整的歷史篇章，再銜接我的親身經歷。</p>
+ <div class="eras">
+ <article class="era"><div class="n">I · ANTIQUITY</div><h3>古代觀念</h3><p>飲食、活動與身體平衡，早已成為人們討論的主題。</p></article>
+ <article class="era"><div class="n">II · 19TH CENTURY</div><h3>節食的普及</h3><p>書籍、個人經驗與新興飲食方法逐漸傳播。</p></article>
+ <article class="era"><div class="n">III · 20TH CENTURY</div><h3>體重與數字</h3><p>熱量計算、體重紀錄和流行文化改變了生活。</p></article>
+ <article class="era"><div class="n">IV · TODAY</div><h3>走向我的故事</h3><p>科學、習慣與個人選擇，最終交會在一段旅程裡。</p></article>
+ </div><div class="end">而這一次，主角是我。<small>網站第一版 · 三幕可跟手滾動的互動序章<br>場景與角色將依審稿逐張迭代，保留原創皮影敘事美術</small></div>
+ <button class="restart" id="restart" type="button">回到開場 ↑</button></div>
+</section>
+<script>
+(function(){
+ 'use strict';
+ const track=document.getElementById('track'),world=document.getElementById('world'),clouds=document.getElementById('clouds'),architecture=document.getElementById('architecture');
+ const cards=[...document.querySelectorAll('.card')],dots=[...document.querySelectorAll('.rail span')],bar=document.getElementById('bar'),number=document.getElementById('number'),hint=document.getElementById('hint');
+ const clamp=(x)=>Math.max(0,Math.min(1,x));const ease=(x)=>{x=clamp(x);return x*x*(3-2*x)};
+ const lerp=(a,b,t)=>a+(b-a)*t;let queued=false;
+ function fadeBand(p,on,full,until,off){return ease((p-on)/(full-on))*(1-ease((p-until)/(off-until)))}
+ function draw(){
+  queued=false;
+  const end=Math.max(1,track.offsetHeight-window.innerHeight);
+  const p=clamp(-track.getBoundingClientRect().top/end);
+  let scale,x,y;
+  if(p<.33){const t=p/.33;scale=lerp(1.02,1.11,t);x=lerp(0,-1,t);y=lerp(0,-1.5,t)}
+  else if(p<.7){const t=ease((p-.33)/.37);scale=lerp(1.11,1.74,t);x=lerp(-1,-2.6,t);y=lerp(-1.5,2.5,t)}
+  else{const t=ease((p-.7)/.3);scale=lerp(1.74,1.04,t);x=lerp(-2.6,0,t);y=lerp(2.5,0,t)}
+  world.style.transform='translate3d('+x.toFixed(3)+'%,'+y.toFixed(3)+'%,0) scale('+scale.toFixed(4)+')';
+  const mist=ease((p-.29)/.19)*(1-ease((p-.59)/.28));
+  clouds.style.opacity=(mist*.93).toFixed(3);
+  clouds.style.transform='translate3d('+(-3+p*9).toFixed(2)+'%,'+(4-p*12).toFixed(2)+'%,0) scale('+(0.88+1.3*ease((p-.3)/.38)).toFixed(3)+')';
+  const reveal=ease((p-.71)/.22);
+  architecture.style.opacity=reveal.toFixed(3);
+  architecture.style.transform='translate3d(0,'+(22*(1-reveal)).toFixed(2)+'px,0)';
+  const op=[1-ease((p-.21)/.16),fadeBand(p,.25,.39,.63,.77),ease((p-.74)/.16)];
+  cards.forEach((c,i)=>{c.style.opacity=op[i].toFixed(3);c.style.transform='translate3d(0,'+((1-op[i])*14).toFixed(2)+'px,0)'});
+  const segment=p<.34?0:p<.72?1:2;
+  number.textContent='0'+(segment+1)+' / 03';
+  dots.forEach((d,i)=>d.classList.toggle('active',i===segment));
+  bar.style.transform='scaleX('+p.toFixed(4)+')';
+  hint.style.opacity=(1-ease((p-.14)/.1)).toFixed(2);
+ }
+ function request(){if(!queued){queued=true;requestAnimationFrame(draw)}}
+ window.addEventListener('scroll',request,{passive:true});
+ window.addEventListener('resize',request,{passive:true});
+ window.addEventListener('orientationchange',request,{passive:true});
+ document.getElementById('restart').addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+ draw();
+})();
+</script>
+</body></html>
