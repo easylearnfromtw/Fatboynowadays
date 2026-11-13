@@ -11,7 +11,7 @@
 *{box-sizing:border-box}html{scroll-behavior:auto}body{margin:0;color:#fff8ec;background:#242033;font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 button,a{-webkit-tap-highlight-color:transparent}button{font:inherit}.track{height:440svh;min-height:2300px;position:relative}.scene{position:sticky;top:0;width:100%;height:100svh;min-height:460px;overflow:hidden;isolation:isolate;background:#a99bc5;touch-action:pan-y}
 .world,.clouds,.architecture{position:absolute;inset:0;pointer-events:none}.world{will-change:transform;transform-origin:50% 55%;backface-visibility:hidden;transform:translate3d(0,0,0) scale(1)}.world svg,.clouds svg,.architecture svg{height:100%;width:100%;display:block;object-fit:cover}
-.world svg{min-width:100%;min-height:100%}.clouds{opacity:0;will-change:transform,opacity;transform-origin:50% 58%}.architecture{opacity:0;will-change:transform,opacity}
+.world svg{min-width:100%;min-height:100%}.world img{display:block;width:100%;height:100%;object-fit:cover;object-position:center center;user-select:none;-webkit-user-drag:none;pointer-events:none}.clouds{opacity:0;will-change:transform,opacity;transform-origin:50% 58%}.architecture{opacity:0;will-change:transform,opacity}
 .skyshade{position:absolute;inset:0;background:linear-gradient(180deg,#21193155 0%,transparent 28%,#25203c0b 53%,#1e183b8d 100%);pointer-events:none}.vignette{position:absolute;inset:0;box-shadow:inset 0 0 100px #38274428;pointer-events:none}
 @keyframes breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}@keyframes nod{0%,100%{transform:rotate(0)}45%{transform:rotate(3deg)}70%{transform:rotate(-1deg)}}@keyframes page{0%,13%,90%,100%{transform:scaleX(1)}45%,55%{transform:scaleX(-.8)}}@keyframes hair{0%,100%{transform:rotate(0deg) translateX(0)}50%{transform:rotate(5deg) translateX(7px)}}@keyframes wander{0%,100%{transform:translateX(0)}50%{transform:translateX(13px)}}@keyframes floaty{0%,100%{transform:translate(0,0) rotate(0deg)}50%{transform:translate(15px,17px) rotate(25deg)}}@keyframes glow{50%{opacity:.7}}
 #spirit{animation:breathe 6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}#spiritHair{animation:hair 5.2s ease-in-out infinite;transform-box:fill-box;transform-origin:25% 50%}#readerHead{animation:nod 5s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}#readerPage{animation:page 7s ease-in-out infinite;transform-box:fill-box;transform-origin:100% 50%}#walker{animation:wander 11s ease-in-out infinite}#lampGlow{animation:glow 4s ease-in-out infinite}.petal{position:absolute;z-index:2;width:9px;height:14px;border-radius:80% 4% 80% 4%;background:linear-gradient(45deg,#fff9f1,#f8d3ef);opacity:.6;left:var(--x);top:var(--y);animation:floaty var(--duration) ease-in-out infinite alternate;animation-delay:var(--delay);pointer-events:none}
@@ -32,70 +32,9 @@ header{position:absolute;z-index:15;top:0;left:0;right:0;display:flex;justify-co
 <div class="track" id="track">
 <main class="scene" aria-label="可透過上下滑動控制的三幕皮影戲開場">
   <div class="world" id="world" aria-hidden="true">
-  <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="sky" x1="0" y1="0" x2="0.5" y2="1"><stop stop-color="#8e83bc"/><stop offset=".47" stop-color="#d0b4de"/><stop offset=".82" stop-color="#ffe2ca"/><stop offset="1" stop-color="#b69bc4"/></linearGradient>
-      <radialGradient id="moon" cx=".5" cy=".48" r=".55"><stop stop-color="#fff9e9"/><stop offset=".49" stop-color="#fff1dd"/><stop offset=".85" stop-color="#f9dfdc" stop-opacity=".7"/><stop offset="1" stop-color="#fff4de" stop-opacity="0"/></radialGradient>
-      <linearGradient id="mount" x1=".1" y1="0" x2=".8" y2="1"><stop stop-color="#bbadcb"/><stop offset="1" stop-color="#7f79ab"/></linearGradient>
-      <linearGradient id="water" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#edd6ed"/><stop offset="1" stop-color="#917ead"/></linearGradient>
-      <filter id="soft"><feGaussianBlur stdDeviation="16"/></filter>
-      <filter id="tiny"><feGaussianBlur stdDeviation="3"/></filter>
-    </defs>
-    <rect width="1600" height="900" fill="url(#sky)"/>
-    <circle cx="801" cy="340" r="284" fill="#fff6dd" opacity=".4" filter="url(#soft)"/>
-    <circle cx="801" cy="340" r="255" fill="url(#moon)"/>
-    <circle cx="801" cy="340" r="220" fill="none" stroke="#fff6dc" stroke-width="2" opacity=".55"/>
-    <circle cx="801" cy="340" r="236" fill="none" stroke="#ffefcd" stroke-width="1" stroke-dasharray="3 18" opacity=".5"/>
-    <g fill="#fff5db" opacity=".8">
-      <path d="M340 185l6 20 20 6-20 6-6 20-6-20-20-6 20-6z"/>
-      <path d="M1127 200l5 15 15 5-15 5-5 15-5-15-15-5 15-5z"/>
-      <path d="M456 327l4 12 12 4-12 4-4 12-4-12-12-4 12-4z"/>
-      <circle cx="1041" cy="121" r="3"/><circle cx="230" cy="92" r="3"/><circle cx="1350" cy="270" r="4"/>
-    </g>
-    <path d="M0 497Q165 361 313 454T618 462Q782 336 944 433T1252 419Q1426 321 1600 446V805H0Z" fill="#d5bcd5" opacity=".55"/>
-    <path d="M0 520L136 401 229 466 335 337 459 489 603 383 751 507 874 391 1024 503 1191 359 1371 479 1514 370 1600 449V900H0Z" fill="url(#mount)" opacity=".56"/>
-    <path d="M0 650Q144 547 283 606T590 583Q790 503 954 588T1300 558Q1468 495 1600 606V900H0Z" fill="#957fae" opacity=".62"/>
-    <g fill="#6c648c" opacity=".52">
-      <path d="M182 539v-102h-26l40-27 40 27h-27v102zM145 482h100v10H145z"/>
-      <path d="M227 513v-71h-18l28-22 28 22h-18v71z"/>
-      <path d="M268 539v-132h-28l43-27 43 27h-28v132z"/>
-      <path d="M1280 548v-150h70v150zM1270 396h90l-45-55zM1380 550v-107h53v107zM1374 440h64l-32-54zM1456 550v-184h45v184zM1444 368h68l-34-58z"/>
-    </g>
-    <path d="M0 590C230 568 352 643 557 598S880 558 1091 606 1414 565 1600 586V900H0Z" fill="url(#water)" opacity=".67"/>
-    <g fill="#f7dfed" opacity=".85"><ellipse cx="293" cy="625" rx="215" ry="31"/><ellipse cx="1130" cy="605" rx="270" ry="38"/><ellipse cx="795" cy="647" rx="240" ry="33"/></g>
-    <g id="spirit" opacity=".47" fill="#d5b7d7" stroke="#c5a9ca" stroke-width="3">
-      <path d="M738 385Q711 408 682 467Q650 491 631 525Q712 510 753 483Q820 500 913 518Q885 458 850 422L833 384Z"/>
-      <ellipse cx="788" cy="302" rx="66" ry="88"/>
-      <path d="M722 285Q709 224 750 219Q775 183 817 206Q878 212 861 296Q852 264 829 247Q769 268 722 285Z"/>
-      <path d="M725 302Q702 325 669 332Q699 356 740 333Z"/>
-      <g id="spiritHair">
-        <path d="M736 238Q680 222 638 257Q579 261 541 239Q573 295 647 293Q714 277 751 254Z" opacity=".86"/>
-        <path d="M724 266Q630 298 566 355Q644 333 733 303Z" opacity=".68"/>
-      </g>
-      <path d="M754 376Q789 389 833 374L862 447Q805 460 704 448Z" fill="#dac2d9"/>
-      <path d="M744 316Q763 334 786 323" stroke="#b396bb" fill="none" stroke-width="2"/>
-    </g>
-    <g fill="#544c6b" stroke="#544c6b" stroke-linecap="round" opacity=".85">
-      <g transform="translate(329 571)"><circle cx="0" cy="-37" r="23"/><path d="M-23-8Q0-22 24-8L31 96H-37Z"/><path d="M-6 57L-11 123M16 57L25 123" stroke-width="9"/><path d="M-17-4L-45 45M20-4L49 42" stroke-width="10"/></g>
-      <g transform="translate(601 585)">
-        <g id="readerHead"><circle cx="0" cy="-60" r="21"/><path d="M-25-76Q-2-110 17-76Z"/></g>
-        <path d="M-28-34Q-3-47 32-33L40 104H-46Z"/>
-        <path d="M-24-23L-45 30M28-25L48 27" stroke-width="11"/>
-        <path d="M-10 4Q18-7 43 6L42 38Q14 26-10 40Z" fill="#edcfce" stroke="#806887" stroke-width="3"/>
-        <path id="readerPage" d="M15 7Q27 1 42 6V39Q29 33 15 35Z" fill="#ffeddd" stroke="#806887" stroke-width="2"/>
-      </g>
-      <g transform="translate(975 571)"><circle cx="0" cy="-38" r="23"/><path d="M-23-64l24-29 23 29Z"/><path d="M-31-8Q0-22 31-8L38 113H-38Z"/><path d="M-18-2L-49 57M21-4L52 56" stroke-width="11"/><path d="M29 20l44-12 3 40-44 11Z" fill="#f9e8d6" stroke="#544c6b" stroke-width="3"/></g>
-      <g id="walker" transform="translate(1230 570)"><circle cx="0" cy="-50" r="22"/><path d="M-19-22Q1-31 19-22L28 49H-27Z"/><path d="M-15 45L-40 126M17 44L34 124" stroke-width="12"/><path d="M-16-9L-49 24M17-9L39 25" stroke-width="10"/><path d="M16-76q44-25 39-5q-14 12-38 9" stroke-width="9" fill="none"/></g>
-    </g>
-    <g fill="#f5d7e7" stroke="#f8e5cf" stroke-width="3">
-      <path d="M0 698Q175 618 343 706T674 690Q856 602 1052 694T1385 678Q1493 623 1600 681V900H0Z"/>
-      <path d="M0 759Q183 667 361 758T712 751Q886 664 1031 748T1347 744Q1492 677 1600 734V900H0Z" fill="#b9a0d1"/>
-      <path d="M0 817Q244 739 448 823T896 801Q1129 735 1350 817T1600 801V900H0Z" fill="#9686b8"/>
-    </g>
-    <g stroke="#fff2d3" stroke-width="2" fill="none" opacity=".7"><path d="M-40 738Q218 640 400 741T835 711Q1098 642 1380 734T1660 700"/><path d="M0 787Q300 687 515 788T950 774Q1255 704 1600 774"/></g>
-  </svg>
+    <img src="assets/original-stage.webp" alt="" draggable="false" decoding="async" fetchpriority="high">
   </div>
-  <div class="clouds" id="clouds" aria-hidden="true">
+    <div class="clouds" id="clouds" aria-hidden="true">
     <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
       <defs><radialGradient id="mist" cx=".5" cy=".5" r=".6"><stop stop-color="#fffaf0" stop-opacity=".95"/><stop offset=".6" stop-color="#f9e6f5" stop-opacity=".8"/><stop offset="1" stop-color="#f9e6f5" stop-opacity="0"/></radialGradient></defs>
       <ellipse cx="330" cy="665" rx="470" ry="270" fill="url(#mist)"/>
@@ -105,22 +44,8 @@ header{position:absolute;z-index:15;top:0;left:0;right:0;display:flex;justify-co
       <path d="M-80 858Q193 652 402 788Q639 618 832 780Q1080 615 1255 790Q1477 610 1680 766V980H-80Z" fill="#eacff5" opacity=".62"/>
     </svg>
   </div>
-  <div class="architecture" id="architecture" aria-hidden="true">
-    <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-      <defs><linearGradient id="wood" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#44314e"/><stop offset=".4" stop-color="#796081"/><stop offset=".65" stop-color="#5d456d"/><stop offset="1" stop-color="#34253f"/></linearGradient><radialGradient id="lantern"><stop stop-color="#fffae8"/><stop offset=".7" stop-color="#f6d8bf"/><stop offset="1" stop-color="#f9cda6"/></radialGradient></defs>
-      <path d="M0 0H1600V59H0Z" fill="#3b2b4a"/><path d="M0 43H1600V72H0Z" fill="#725779" stroke="#c5a1ad" stroke-width="4"/>
-      <path d="M0 0H106V900H0ZM1494 0H1600V900H1494Z" fill="url(#wood)" stroke="#d0b08c" stroke-width="8"/>
-      <path d="M124 0H1476V24H124Z" fill="#4e3858"/>
-      <g fill="#e2bfa7" opacity=".9"><path d="M340 0L380 40 420 0Z"/><path d="M1180 0L1220 40 1260 0Z"/><path d="M715 0l85 55 85-55-85 92Z" fill="#ad87a9" stroke="#efc9a5" stroke-width="5"/></g>
-      <g transform="translate(154 72)"><path d="M-48 0H48L43 100Q0 126-43 100Z" fill="url(#lantern)" stroke="#79556b" stroke-width="7"/><path d="M-40 17H40M-43 83H43M0 0V115" stroke="#caa889" stroke-width="4"/><circle cx="0" cy="52" r="86" fill="#fff2ce" opacity=".18" id="lampGlow"/></g>
-      <g transform="translate(1446 72)"><path d="M-48 0H48L43 100Q0 126-43 100Z" fill="url(#lantern)" stroke="#79556b" stroke-width="7"/><path d="M-40 17H40M-43 83H43M0 0V115" stroke="#caa889" stroke-width="4"/></g>
-      <path d="M0 772H1600V900H0Z" fill="#60425a"/><path d="M0 767H1600V783H0Z" fill="#d3a78f"/><path d="M0 800H1600V817H0Z" fill="#8d6b77"/>
-      <path d="M110 826Q800 780 1490 826V900H110Z" fill="#987a8d" opacity=".46"/>
-      <g transform="translate(250 762)"><path d="M-92-7H108L122 58H-101Z" fill="#4b3a60" stroke="#c9a3a4" stroke-width="5"/><path d="M-83 6H94L102 38H-89Z" fill="#7b6086"/><path d="M52-30L154-20L144 22L45 12Z" fill="#f9e9db" stroke="#b88d96" stroke-width="4"/><path d="M45-8Q95-18 138 5" fill="none" stroke="#b88d96" stroke-width="3"/></g>
-      <g transform="translate(1360 780)"><path d="M-55 24Q-20-100 41-77Q88-40 56 19" fill="none" stroke="#ae8b87" stroke-width="11"/><circle cx="-6" cy="-29" r="18" fill="#eec7ab"/><path d="M-17-39l22 24-21-1 20-24" fill="none" stroke="#81677c" stroke-width="3"/><path d="M-88 16H104V35H-88Z" fill="#47314d"/></g>
-    </svg>
-  </div>
-  <div class="petal" style="--x:16%;--y:26%;--duration:7s;--delay:-2s"></div>
+  <div class="architecture" id="architecture" aria-hidden="true"></div>
+    <div class="petal" style="--x:16%;--y:26%;--duration:7s;--delay:-2s"></div>
   <div class="petal" style="--x:80%;--y:33%;--duration:8s;--delay:-4s"></div>
   <div class="petal" style="--x:28%;--y:68%;--duration:6s;--delay:-1s"></div>
   <div class="skyshade"></div><div class="vignette"></div>
@@ -160,16 +85,16 @@ header{position:absolute;z-index:15;top:0;left:0;right:0;display:flex;justify-co
   // All three acts continuously pull the camera BACK: scale decreases throughout.
   // Keep the movement tied directly to the native scroll distance (no reversed zoom).
   let scale;
-  if(p<.34){scale=lerp(1.72,1.46,p/.34)}
-  else if(p<.72){scale=lerp(1.46,1.20,(p-.34)/.38)}
-  else{scale=lerp(1.20,1.0,(p-.72)/.28)}
+  if(p<.34){scale=lerp(2.15,1.98,p/.34)}
+  else if(p<.72){scale=lerp(1.98,1.72,(p-.34)/.38)}
+  else{scale=lerp(1.72,1.0,(p-.72)/.28)}
   world.style.transform='translate3d(0,0,0) scale('+scale.toFixed(4)+')';
   // Clouds drift sideways and shrink as the field of view opens outward.
   const mist=ease((p-.27)/.16)*(1-ease((p-.60)/.26));
   clouds.style.opacity=(mist*.91).toFixed(3);
   const cloudScale=lerp(1.66,1.0,p);
   clouds.style.transform='translate3d('+lerp(-4,5,p).toFixed(2)+'%,'+lerp(5,-6,p).toFixed(2)+'%,0) scale('+cloudScale.toFixed(3)+')';
-  // The frame and tabletop appear only once the final pullback reveals the stage.
+  // The approved original picture includes the stage frame and tabletop; cropping hides them until the final pullback.
   const reveal=ease((p-.72)/.24);
   architecture.style.opacity=reveal.toFixed(3);
   architecture.style.transform='translate3d(0,'+(24*(1-reveal)).toFixed(2)+'px,0) scale('+(1.06-.06*reveal).toFixed(3)+')';
