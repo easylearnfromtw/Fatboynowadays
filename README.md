@@ -5,7 +5,7 @@ A scroll-driven, original 2D shadow-puppet storytelling website about humanity's
 ## Live site
 When GitHub Pages is enabled, visit https://easylearnfromtw.github.io/Fatboynowadays/
 
-## Current stage · v0.5
+## Current stage · v0.6
 - **Act I:** no window or desk; layered historical scene and gentle looping character movements.
 - **Act II:** two approved cut-paper shadow-theatre panels enter from the left and right, gather at centre and pause there; all motion follows native scroll, including reverse movement.
 - **Act III:** the two paper-cut panels retreat toward their respective sides while the camera continues pulling out, revealing the entire original theatre image.
@@ -45,3 +45,7 @@ The original painted stage remains unchanged. These are real transparent WebP im
 - `assets/curtain-right.webp` — complementary right paper-cut scenery, designed to extend toward the centre.
 - In Act II, the paired scenery panels converge from opposite sides (`p=.34–.64`) and stay gathered until `p=.72`; in Act III (`p=.72–.96`) they withdraw to reveal the complete stage. Scroll position is the sole animation clock, so the panels stop with the finger and reverse on upward scrolling.
 - Prior three long ribbon-cloud image assets are retained in the repository for comparison and rollback, but are no longer rendered on the page.
+
+## Japan chapter layered scene (v0.6 preview)
+
+A fully separate Japanese-stage prototype has been inserted after the original three-act shadow-cloud prologue. It retains the original artwork and camera. Scroll down through the main site to reach the new shoji-opening scene, then to the existing historical overview. Components are separate SVG files (background, dry garden, left and right shoji, cherry blossoms, lantern, kimono heroine, fan, tea table) under `japan-preview/`. The elements have scroll-controlled parallax and a door-opening transition, reversible with native browser scrolling. A self-contained separate review page is at `/japan-preview/`. This is **technical layered art**, not approved final illustrated characters; five evidence-grounded historical case studies will be authored after art review.
