@@ -7,9 +7,9 @@ When GitHub Pages is enabled, visit https://easylearnfromtw.github.io/Fatboynowa
 
 ## Current stage · v0.2
 - **Act I:** no window or desk; layered historical scene and gentle looping character movements.
-- **Act II:** continuous zoom and passing pastel clouds.
-- **Act III:** the camera pulls back and the theatre window, lanterns, and tabletop enter the scene.
-- Native vertical scrolling controls the camera directly: drag/scroll forward or backward; no GIF frame stepping and no mandatory autoplay.
+- **Act II:** continuing camera pullback (zoom out) with pastel clouds drifting outward.
+- **Act III:** the camera keeps pulling back; the theatre window, lanterns, and tabletop enter only at the end.
+- Native vertical scrolling controls one continuous outward camera pullback across all three acts: drag/scroll forward or backward; no GIF frame stepping, reverse zoom or mandatory autoplay.
 - Responsive mobile-first layout, no frameworks, no external fonts, no backend, and no build process.
 - Independent SVG parts animate subtle reading, nodding, hair movement and walking.
 - A history overview follows the opening; the complete history and personal chapters are planned for later.
