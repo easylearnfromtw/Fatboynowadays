@@ -5,7 +5,7 @@ A scroll-driven, original 2D shadow-puppet storytelling website about humanity's
 ## Live site
 When GitHub Pages is enabled, visit https://easylearnfromtw.github.io/Fatboynowadays/
 
-## Current stage · v0.7
+## Current stage · v0.8
 - **Act I:** no window or desk; layered historical scene and gentle looping character movements.
 - **Act II:** two approved cut-paper shadow-theatre panels enter from the left and right, gather at centre and pause there; all motion follows native scroll, including reverse movement.
 - **Act III:** the two paper-cut panels retreat toward their respective sides while the camera continues pulling out, revealing the entire original theatre image.
@@ -53,3 +53,9 @@ A fully separate Japanese-stage prototype has been inserted after the original t
 ## Japan approved artwork update (v0.7)
 
 The Japanese chapter and `/japan-preview/` now use the exact approved generated ukiyo-e illustration at `assets/japan-approved.webp` instead of the provisional SVG character, dry garden, and furniture. The portrait composition is preserved with a responsive stage: phone viewport shows the tall artwork, desktop positions it as a tall central image with a text area beside it. A matched pair of shoji-screen panels parts horizontally in response to native vertical scrolling; scroll position also controls the slow pullback and separate paper-cut overlays derived from this **same original illustration**: cherry blossom canopy, foreground petals, and tea table. These layers move subtly to provide real element-level depth without replacing the approved artwork. A few lightweight petal details are independent. Main three-part opening remains unchanged. The character is *not yet* an independently joint-rigged puppet; detailed arm, hair, facial and fan animation remains future work. The five verified Japan-history stories are not yet published.
+
+## First-act picture-frame visibility (v0.8)
+
+- The opening camera still **pulls outward** continuously across the three native scroll segments, but no longer crops off the original image's carved frame on desktop (1.16→1.10→1.05→1.00 scale).
+- Portrait phone/tablet views retain a cinematic image crop and display actual side-post and crest fragments extracted from the exact approved original artwork (`assets/original-window-{left,right,crest}.webp`). The frame remains visible at scroll progress 0 instead of waiting until the final reveal.
+- The paired cloud curtains, main picture, and Japanese chapter are preserved. No alternative artwork or framework dependency is introduced.
