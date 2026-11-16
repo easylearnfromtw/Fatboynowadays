@@ -1,29 +1,38 @@
-# MOCHI LAB — 3D Soft Touch
+# MOCHI LAB — 3D Tear & Heal
 
-**Interactive WebGL 3D mochi** with surface dents, fingertip contact shadows, studio highlights and multi-touch deformation. Replaces the earlier 2D rendering on the same GitHub Pages site.
+A touch-responsive 3D mochi with **single-finger dents, contact shadows, multi-finger elastic stretching, physical separation and self-rebonding**.
 
-## Open
+## Try it
 
 https://easylearnfromtw.github.io/Fatboynowadays/
 
+This is a GitHub Pages static website using `index.html` and `mochi-3d.js`. GitHub Pages publishing must be enabled in the repository settings.
+
 ## Gestures
 
-- **Single finger: press and hold.** A true geometric depression forms under the fingertip, with local cavity shadow and a raised reflective rim.
-- **Single finger: drag.** Move the held patch to pull the 3D surface.
-- **Two or more fingers:** stretch, pinch and twist simultaneously.
-- **Release:** spring-damped soft return, with inertia influenced by elasticity and viscosity sliders.
-- **Flavours:** peach, taro and matcha lighting palettes.
-- **Reset:** restores the original 3D shape.
+- **Press and hold:** The 3D surface sinks inward. The dent receives its own contact shadow and a softly reflective rim.
+- **Drag one finger:** Tug the dough beyond its tensile limit to tear it.
+- **Stretch with two fingers:** Pull apart until the object snaps into **two independently rendered, movable 3D pieces**.
+- **After tearing:** Drag the pieces toward one another or release them; the unheld pieces attract until their edges meet and the pieces rebond into one object.
+- **Elasticity:** Controls snap-back and tear threshold; greater elasticity allows a longer stretch before rupture.
+- **Viscosity:** Controls resistance and how quickly the dough settles after release.
+- **Reset:** Restores a single undamaged mochi.
 
-## Implementation
+The tear/rebond process uses a stylized physically inspired model rather than a continuum-mechanics simulation. Detached pieces are closed 3D meshes, not a literal mesh topology fracture with torn interior surfaces.
 
-- `index.html`: responsive interface, controls and a soft blurred floor-contact shadow.
-- `mochi-3d.js`: dependency-free WebGL 3D surface renderer. A closed UV-sphere-like ellipsoid uses **3D mesh vertex displacement**, per-frame surface-normal recomputation, a cavity ambient-occlusion shader and studio-style diffuse/specular lighting.
-- Uses Pointer Events and pointer capture for multi-finger touch, mouse and pen input.
-- Rendering uses raw WebGL 1.0. Modern iOS Safari, Android Chrome and desktop browsers with WebGL enabled can run it without a bundler. A static 2D illustration is shown if WebGL is unavailable.
+## Color Library · Numbered Color Atlas
 
-The simulation is an interactive approximation of a soft viscoelastic object, not a calibrated finite-element physics model.
+Tap **色盤 COLOR ATLAS** to open a fan-deck-inspired library with **20 original colors** across five color families: Rose, Violet, Green, Neutral, Blue. Filter by family and tap a large swatch to change the 3D material. Each color has an original code (`ML-101`–`ML-504`), English name and Chinese name.
 
-## Version history
+The visual organization is inspired by professional printed color catalogs; **ML codes are original and are not official Pantone references or calibrated Pantone matches.**
 
-The original historical shadow-puppet storytelling site 《千年之重》 and the earlier Canvas 2D mochi implementation are preserved in Git history. Artwork assets from earlier work were not deleted.
+## Technology
+
+- Native WebGL 1.0, realtime vertex deformation, dynamically recalculated mesh normals, ambient occlusion inside fingertip cavities, specular studio highlights and CSS floor shadow.
+- Pointer Events, multitouch capture, spring-damped deformation, threshold-based separation and independent piece attraction.
+- Mobile-first layout, no framework, build step, server or external JavaScript dependencies.
+- If WebGL is not supported, a noninteractive Canvas 2D fallback drawing is displayed.
+
+## Older versions
+
+The previous scrolling shadow-puppet site 《千年之重》 and the earlier 2D mochi experiment remain accessible through Git history. Original asset directories were not deleted.
