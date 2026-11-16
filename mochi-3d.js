@@ -224,6 +224,100 @@
   renderPalette();setPalette(chosenCode);
   const contacts=new Map(),deformations=[],pressUniform=new Float32Array(8*4);
   let viewW=0,viewH=0,centerX=0,centerY=0,scale=1,dpr=1,time=0,lastTime=0;
+  // An intact, lit mesh can tear into two independently movable closed meshes.
+  // Edges are re-bonded when the pieces touch or return under viscous attraction.
+  let tear=null;
+  let rejoinPulse=0;
+  const tearHint=document.getElementById('tear-hint');
+  function splitGesture(){
+    if(tear||contacts.size===0)return;
+    const arr=Array.from(contacts.values());
+    const E=Number(elasticity.value);
+    let ax=1,ay=0,excess=0,cx=0,cy=0;
+    const limit=.76+E*.082;
+    if(arr.length>=2){
+      let first=null,second=null,largest=0;
+      for(let i=0;i<arr.length;i++)for(let j=i+1;j<arr.length;j++){
+        const a=arr[i],b=arr[j];
+        const nowDist=Math.hypot(a.x-b.x,a.y-b.y);
+        const startDist=Math.hypot(a.startX-b.startX,a.startY-b.startY);
+        const growth=nowDist-startDist;
+        if(growth>largest){largest=growth;first=a;second=b;}
+      }
+      if(!first||largest<limit)return;
+      const dx=second.x-first.x,dy=second.y-first.y;
+      const dist=Math.hypot(dx,dy)||1;
+      ax=dx/dist;ay=dy/dist;
+      cx=clamp((first.x+second.x)*.5,-.4,.4);
+      cy=clamp((first.y+second.y)*.5,-.38,.38);
+      excess=largest;
+    }else{
+      const t=arr[0],dx=t.x-t.startX,dy=t.y-t.startY;
+      const len=Math.hypot(dx,dy);
+      if(len<limit*1.54)return;
+      ax=dx/len;ay=dy/len;excess=len;
+    }
+    const opening=clamp(1.42+(excess-limit)*.32,1.44,2.10);
+    tear={
+      axisX:ax,axisY:ay,
+      pieces:[
+        {index:0,x:cx-ax*opening*.5,y:cy-ay*opening*.5,vx:-ax*.02,vy:-ay*.02},
+        {index:1,x:cx+ax*opening*.5,y:cy+ay*opening*.5,vx:ax*.02,vy:ay*.02}
+      ],
+      cooldown:18
+    };
+    for(const t of arr){
+      const projection=(t.x-cx)*ax+(t.y-cy)*ay;
+      const piece=projection<0?tear.pieces[0]:tear.pieces[1];
+      t.piece=piece.index;
+      t.holdX=t.x-piece.x;t.holdY=t.y-piece.y;
+      t.dx=0;t.dy=0;t.vx=0;t.vy=0;
+    }
+    tearHint.textContent='MATERIAL SEPARATED · 靠近會重新黏合';
+    tearHint.classList.add('torn');
+    updateStatus();
+  }
+  function advancePieces(frame){
+    if(!tear)return;
+    const pieces=tear.pieces;
+    const midX=(pieces[0].x+pieces[1].x)*.5;
+    const midY=(pieces[0].y+pieces[1].y)*.5;
+    for(const p of pieces){
+      const gripping=Array.from(contacts.values()).filter(t=>t.piece===p.index);
+      let goalX,goalY;
+      if(gripping.length){
+        goalX=gripping.reduce((a,t)=>a+t.x-t.holdX,0)/gripping.length;
+        goalY=gripping.reduce((a,t)=>a+t.y-t.holdY,0)/gripping.length;
+      }else{
+        const sign=p.index===0?-1:1;
+        const other=pieces[1-p.index];
+        // Released portions retain inertia, then approach each other like
+        // tacky rice dough until they contact and permanently fuse.
+        const attract=contacts.size?1:.2;
+        const bondX=other.x+tear.axisX*sign*.85;
+        const bondY=other.y+tear.axisY*sign*.85;
+        goalX=bondX*attract+(midX+tear.axisX*sign*.41)*(1-attract);
+        goalY=bondY*attract+(midY+tear.axisY*sign*.41)*(1-attract);
+      }
+      const V=Number(viscosity.value);
+      const stiffness=gripping.length?.14:.032+Number(elasticity.value)*.004;
+      const damp=gripping.length?.75:.90-V*.01;
+      p.vx=(p.vx+(goalX-p.x)*stiffness*frame)*Math.pow(damp,frame);
+      p.vy=(p.vy+(goalY-p.y)*stiffness*frame)*Math.pow(damp,frame);
+      p.x=clamp(p.x+p.vx*frame,-3.5,3.5);
+      p.y=clamp(p.y+p.vy*frame,-3.0,3.0);
+    }
+    tear.cooldown=Math.max(0,tear.cooldown-frame);
+    const d=Math.hypot(pieces[1].x-pieces[0].x,pieces[1].y-pieces[0].y);
+    if(tear.cooldown===0&&d<1.18){
+      tear=null;rejoinPulse=1;
+      contacts.clear();deformations.length=0;
+      tearHint.classList.remove('torn');
+      tearHint.textContent='BONDED AGAIN · 再拉長就能撕開';
+      updateStatus();
+    }
+  }
+
   function resize(){
     viewW=window.innerWidth;viewH=window.innerHeight;
     dpr=Math.min(window.devicePixelRatio||1,2);
@@ -240,7 +334,7 @@
     shadow.style.top=(centerY+radius*.74)+'px';
     shadow.style.width=(radius*1.86)+'px';
     shadow.style.height=(radius*.43)+'px';
-    contacts.clear();deformations.length=0;updateStatus();
+    contacts.clear();deformations.length=0;tear=null;rejoinPulse=0;updateStatus();
   }
   function world(e){
     const rect=canvas.getBoundingClientRect();
@@ -249,12 +343,31 @@
   function updateStatus(){
     const n=contacts.size;
     status.classList.toggle('engaged',n>0);
-    statusText.textContent=n?String(n).padStart(2,'0')+' POINT'+(n===1?'':'S')+' ACTIVE':'READY TO SQUISH';
+    statusText.textContent=tear?'SPLIT / SELF-HEALING':n?String(n).padStart(2,'0')+' POINT'+(n===1?'':'S')+' ACTIVE':'READY TO SQUISH';
     canvas.classList.toggle('grabbing',n>0);
   }
   function grab(e){
     if(e.pointerType==='mouse'&&e.button!==0)return;
     const p=world(e);
+    // Both detached parts have their own hit-test and pressure dimple.
+    if(tear){
+      let chosen=null,best=Infinity;
+      for(const piece of tear.pieces){
+        const dx=p.x-piece.x,dy=p.y-piece.y;
+        const dist=Math.hypot(dx,dy);
+        if(dist<best&&dist<.74){chosen=piece;best=dist;}
+      }
+      if(!chosen)return;
+      e.preventDefault();
+      try{canvas.setPointerCapture(e.pointerId);}catch(_){}
+      const t={pointerId:e.pointerId,piece:chosen.index,
+        anchorX:p.x,anchorY:p.y,startX:p.x,startY:p.y,x:p.x,y:p.y,
+        holdX:p.x-chosen.x,holdY:p.y-chosen.y,
+        dx:0,dy:0,vx:0,vy:0,depth:.05,depthVelocity:.07,
+        pressure:Math.max(.5,e.pressure||0),active:true};
+      deformations.push(t);contacts.set(e.pointerId,t);
+      updateStatus();return;
+    }
     let closest=-1,best=.22*.22;
     // Hit-test rendered surface, not the undeformed silhouette.
     for(let i=0;i<COUNT;i++){
@@ -298,11 +411,15 @@
   canvas.addEventListener('pointercancel',release);
   canvas.addEventListener('lostpointercapture',release);
   canvas.addEventListener('contextmenu',e=>e.preventDefault());
-  document.getElementById('reset').addEventListener('click',()=>{contacts.clear();deformations.length=0;updateStatus();});
+  document.getElementById('reset').addEventListener('click',()=>{contacts.clear();deformations.length=0;tear=null;rejoinPulse=0;tearHint.classList.remove('torn');tearHint.textContent='STRETCH TO TEAR · 拉至極限可撕裂';updateStatus();});
   [elasticity,viscosity].forEach(el=>el.addEventListener('input',()=>{
     document.getElementById(el===elasticity?'spring-value':'viscosity-value').textContent=String(el.value).padStart(2,'0');
   }));
   function step(factor){
+    splitGesture();
+    advancePieces(factor);
+    rejoinPulse*=Math.pow(.93,factor);
+    if(rejoinPulse<.001)rejoinPulse=0;
     const E=Number(elasticity.value),V=Number(viscosity.value);
     const returning=.025+E*.006,resistance=clamp(.94-V*.024,.66,.94);
     for(let i=deformations.length-1;i>=0;i--){
@@ -323,11 +440,32 @@
       }
     }
   }
-  function deform(){
+  function deform(piece){
     const idle=reduceMotion?0:Math.sin(time*.0014)*.006;
     for(let i=0;i<COUNT;i++){
       const k=i*3,x0=original[k],y0=original[k+1],z0=original[k+2];
       let x=x0,y=y0,z=z0;
+      if(piece){
+        // Actual separate closed mesh with independent position and orientation.
+        const X=x0*.60,Y=y0*.88;
+        x=piece.x+X*tear.axisX-Y*tear.axisY;
+        y=piece.y+X*tear.axisY+Y*tear.axisX;
+        z=z0*.84;
+        const front=clamp((z0+.08)/.43,0,1);
+        for(const t of deformations){
+          if(t.piece!==piece.index)continue;
+          const dx=x-t.x,dy=y-t.y,d2=dx*dx+dy*dy;
+          const press=Math.exp(-d2/(2*.22*.22));
+          const lip=Math.exp(-Math.pow((Math.sqrt(d2)-.31)/.10,2));
+          z+=front*clamp(t.depth,0,1)*(-.30*press+.035*lip);
+        }
+        positions[k]=x;positions[k+1]=y;positions[k+2]=z;
+        continue;
+      }
+      if(rejoinPulse>0){
+        x*=1+rejoinPulse*.15;
+        y*=1-rejoinPulse*.12;
+      }
       const front=clamp((z0+.08)/.43,0,1);
       for(let j=0;j<deformations.length;j++){
         const t=deformations[j],ox=x0-t.anchorX,oy=y0-t.anchorY,d2=ox*ox+oy*oy;
@@ -359,28 +497,45 @@
       normals[i]/=len;normals[i+1]/=len;normals[i+2]/=len;
     }
   }
-  function render(now){
-    const frame=lastTime?clamp((now-lastTime)/16.667,.5,2):1;
-    lastTime=now;time=now;step(frame);deform();
+  function uploadDraw(piece){
+    deform(piece);
     pressUniform.fill(0);
     let n=0;
     for(const t of deformations){
-      if(n>=8)break;const d=Math.max(0,t.depth);if(d<.01)continue;
-      pressUniform[n*4]=t.anchorX+t.dx*.85;
-      pressUniform[n*4+1]=t.anchorY+t.dy*.85;
+      if(n>=8)break;
+      if(piece&&t.piece!==piece.index)continue;
+      if(!piece&&t.piece!==undefined)continue;
+      const d=Math.max(0,t.depth);if(d<.01)continue;
+      pressUniform[n*4]=piece?t.x:t.anchorX+t.dx*.85;
+      pressUniform[n*4+1]=piece?t.y:t.anchorY+t.dy*.85;
       pressUniform[n*4+2]=d;
-      pressUniform[n*4+3]=.285;n++;
+      pressUniform[n*4+3]=piece?.22:.285;n++;
     }
     gl.uniform4fv(uni.press,pressUniform);
     gl.bindBuffer(gl.ARRAY_BUFFER,posBuffer);
     gl.bufferSubData(gl.ARRAY_BUFFER,0,positions);
     gl.bindBuffer(gl.ARRAY_BUFFER,normalBuffer);
     gl.bufferSubData(gl.ARRAY_BUFFER,0,normals);
+    gl.drawElements(gl.TRIANGLES,indexData.length,gl.UNSIGNED_SHORT,0);
+  }
+  function render(now){
+    const frame=lastTime?clamp((now-lastTime)/16.667,.5,2):1;
+    lastTime=now;time=now;step(frame);
     gl.clearColor(0,0,0,0);
     gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
-    gl.drawElements(gl.TRIANGLES,indexData.length,gl.UNSIGNED_SHORT,0);
+    if(tear){
+      uploadDraw(tear.pieces[0]);
+      uploadDraw(tear.pieces[1]);
+    }else{
+      uploadDraw(null);
+    }
     let width=1;
-    if(deformations.length)width=1+Math.min(.35,deformations.reduce((m,t)=>m+Math.abs(t.dx),0)*.11);
+    if(tear){
+      const a=tear.pieces;
+      width=1+Math.min(.6,Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)*.13);
+    }else if(deformations.length){
+      width=1+Math.min(.35,deformations.reduce((m,t)=>m+Math.abs(t.dx),0)*.11);
+    }
     shadow.style.transform='translate(-50%,-50%) scaleX('+width+')';
     requestAnimationFrame(render);
   }
