@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#faf6f1">
   <meta name="description" content="MOCHI LAB — 用手指揉捏一顆有彈性、有重量、會回彈的數位麻糬。支援多點觸控。">
-  <title>MOCHI LAB — 3D Soft Touch</title>
+  <title>MOCHI LAB — 3D Tear & Heal</title>
   <style>
     :root{--ink:#493b3d;--muted:#958a87;--paper:#faf6f1;--line:#e9dfd9;--accent:#d58c98;--ui:#fffdfa}
     *{box-sizing:border-box}
@@ -89,6 +89,48 @@
   filter:blur(14px);opacity:.78;will-change:transform}
 #stage{background:transparent}
 @media(max-width:650px){#shadow3d{filter:blur(11px)}}
+
+/* Numbered color archive, inspired by physical fan-deck color systems */
+.palette-picker{display:flex;flex-direction:column;min-width:120px;gap:8px}
+.palette-picker .label{font-size:10px;font-weight:800;letter-spacing:.14em;color:#725c60;white-space:nowrap}
+.palette-trigger{display:flex;align-items:center;gap:9px;text-align:left;background:transparent;border:0;padding:0;cursor:pointer;color:#554145}
+.palette-current{width:28px;height:28px;flex:none;border-radius:6px;background:#EFB0BB;border:2px solid #fff;box-shadow:0 0 0 1px #cbbcb7}
+.palette-ref{display:flex;flex-direction:column;gap:2px}
+.palette-ref strong{font-family:Georgia,serif;font-size:12px;font-weight:700;letter-spacing:.04em}
+.palette-ref small{font-size:9px;letter-spacing:.08em;color:#9e8a86}
+.palette-trigger svg{width:15px;height:15px;stroke:#8a6a6c;fill:none;stroke-width:1.5}
+.palette-library{position:absolute;z-index:16;right:clamp(17px,4vw,62px);bottom:clamp(132px,18vh,164px);width:min(485px,calc(100% - 32px));max-height:min(590px,calc(100dvh - 180px));display:none;flex-direction:column;gap:16px;background:#fffcf8f4;border:1px solid #fff;border-radius:23px;padding:23px;box-shadow:0 30px 90px #6e51513b,0 4px 20px #9f76701c;backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px)}
+.palette-library.is-open{display:flex}
+.palette-top{display:flex;justify-content:space-between;align-items:start;gap:12px}
+.palette-title{font-family:Georgia,serif;font-size:31px;font-weight:400;letter-spacing:-.065em;color:#534244}
+.palette-kicker{font-size:9px;font-weight:800;color:#ac8d88;letter-spacing:.2em}
+.palette-close{flex:none;background:#f4ece7;border:0;color:#775f5e;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:21px}
+.palette-filters{display:flex;flex-wrap:wrap;gap:5px}
+.palette-filters button{border:1px solid #e9deda;border-radius:100px;padding:7px 10px;background:#fffcf9;color:#7f6c68;font-size:10px;letter-spacing:.06em;cursor:pointer}
+.palette-filters button[aria-pressed=true]{background:#5c474c;color:#fff;border-color:#5c474c}
+.palette-grid{min-height:100px;overflow-y:auto;overscroll-behavior:contain;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:2px 4px 6px 2px}
+.palette-chip{display:flex;flex-direction:column;overflow:hidden;min-width:0;text-align:left;border:1px solid #e7ddda;background:#fff;border-radius:7px;padding:0;cursor:pointer;box-shadow:0 2px 7px #6d4c420a;transition:transform .13s,box-shadow .13s}
+.palette-chip:hover{transform:translateY(-2px);box-shadow:0 5px 18px #6d4c422c}
+.palette-chip[aria-pressed=true]{outline:2px solid #71575c;outline-offset:1px}
+.chip-face{display:block;height:65px;width:100%;flex:none}
+.chip-detail{display:flex;flex-direction:column;min-width:0;gap:4px;padding:8px 7px 9px}
+.chip-detail strong{font-size:10px;color:#4d3c40;letter-spacing:.05em}
+.chip-detail small{font-family:Georgia,serif;font-size:9px;color:#8f7a75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.palette-current-info{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid #ede4dd;padding-top:12px}
+.palette-current-info strong{font-size:11px;letter-spacing:.07em}
+.palette-note{font-size:9px;line-height:1.6;color:#a0908b;max-width:210px;text-align:right}
+.material-state{position:absolute;z-index:4;left:50%;bottom:clamp(156px,20vh,190px);transform:translateX(-50%);font-size:10px;letter-spacing:.16em;text-align:center;white-space:nowrap;color:#9a7f7b;font-weight:700;pointer-events:none;text-shadow:0 1px 4px #fff}
+.material-state.torn{color:#bd5a70}
+@media(max-width:650px){
+  .palette-picker{min-width:91px;gap:8px}.palette-picker .label{font-size:9px;letter-spacing:.01em}
+  .palette-current{width:23px;height:23px}.palette-trigger{gap:5px}.palette-trigger svg{width:12px}
+  .palette-ref strong{font-size:11px}.palette-ref small{font-size:8px}
+  .palette-library{right:12px;bottom:max(118px,calc(112px + env(safe-area-inset-bottom)));padding:17px;gap:12px;max-height:calc(100dvh - 195px);border-radius:17px}
+  .palette-title{font-size:28px}.palette-grid{gap:7px}
+  .chip-face{height:51px}.chip-detail{padding:6px 5px 7px}.chip-detail strong{font-size:9px}.chip-detail small{font-size:8px}
+  .material-state{bottom:clamp(170px,24vh,220px);font-size:9px;max-width:95%;overflow:hidden;text-overflow:ellipsis}
+}
+@media(max-height:620px){.palette-library{bottom:91px;max-height:calc(100dvh - 108px)}.material-state{display:none}}
 </style>
 </head>
 <body>
@@ -109,19 +151,38 @@
   <div class="side-note" aria-hidden="true"><div class="line"></div><p>TOUCH / STRETCH<br>SQUISH / RELEASE</p><strong>隨心揉捏</strong></div>
   <div class="active" id="active" aria-live="polite"><span class="active-dot"></span><span id="active-text">READY TO SQUISH</span></div>
   <section class="bottom" aria-label="物理材質控制">
-    <div class="instruction"><strong>伸出手指，揉一揉。</strong> 單指按出凹陷與陰影，多指拉伸，鬆手後柔軟回彈。</div>
+    <div class="instruction"><strong>伸出手指，揉一揉。</strong> 單指壓出凹痕，多指拉斷；把兩塊靠近就能重新黏合。</div>
     <div class="panel">
       <div class="control"><div class="control-head"><label for="spring">彈性 ELASTICITY</label><span class="value" id="spring-value">07</span></div><input id="spring" type="range" min="1" max="10" value="7" aria-label="彈性"></div>
       <span class="separator" aria-hidden="true"></span>
       <div class="control"><div class="control-head"><label for="viscosity">黏性 VISCOSITY</label><span class="value" id="viscosity-value">06</span></div><input id="viscosity" type="range" min="1" max="10" value="6" aria-label="黏性"></div>
       <span class="separator" aria-hidden="true"></span>
-      <div class="swatches"><span class="label">口味 FLAVOUR</span><div class="swatch-row" role="group" aria-label="麻糬顏色">
-        <button class="swatch rose" data-flavour="rose" aria-label="蜜桃粉" aria-pressed="true"></button>
-        <button class="swatch taro" data-flavour="taro" aria-label="芋泥紫" aria-pressed="false"></button>
-        <button class="swatch matcha" data-flavour="matcha" aria-label="抹茶綠" aria-pressed="false"></button>
-      </div></div>
+      <div class="palette-picker"><span class="label">色盤 COLOR ATLAS</span>
+        <button class="palette-trigger" id="palette-trigger" type="button" aria-expanded="false" aria-controls="palette-library" aria-label="開啟色盤">
+          <span class="palette-current" id="palette-current"></span>
+          <span class="palette-ref"><strong id="selected-code">ML-101</strong><small>20 COLORS</small></span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5"/></svg>
+        </button>
+      </div>
     </div>
   </section>
+  <aside id="palette-library" class="palette-library" aria-hidden="true" aria-label="設計色彩圖鑑">
+    <div class="palette-top">
+      <div><div class="palette-kicker">THE SOFT CHROMA ARCHIVE / VOL. 01</div><div class="palette-title">Color Library.</div></div>
+      <button class="palette-close" type="button" aria-label="關閉色盤">×</button>
+    </div>
+    <div class="palette-filters" role="group" aria-label="色系篩選">
+      <button data-family="all" aria-pressed="true">ALL</button>
+      <button data-family="pink" aria-pressed="false">ROSE</button>
+      <button data-family="violet" aria-pressed="false">VIOLET</button>
+      <button data-family="green" aria-pressed="false">GREEN</button>
+      <button data-family="neutral" aria-pressed="false">NEUTRAL</button>
+      <button data-family="blue" aria-pressed="false">BLUE</button>
+    </div>
+    <div class="palette-grid" id="palette-grid" role="group" aria-label="可選顏色"></div>
+    <div class="palette-current-info"><strong id="selected-name">Blush Veil / 薄霧玫瑰</strong><span class="palette-note">ML 為自訂色號，並非 Pantone 官方色號。</span></div>
+  </aside>
+  <div id="tear-hint" class="material-state" role="status">STRETCH TO TEAR · 拉至極限可撕裂</div>
   <div class="foot">MADE TO BE TOUCHED · 2026</div>
 </main>
 <script src="mochi-3d.js" defer></script>
