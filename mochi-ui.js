@@ -7,6 +7,7 @@ const sound=$('sound-toggle'),haptic=$('haptic-toggle');
 const consent=$('consent-dialog'),photo=$('photo-dialog'),preview=$('photo-image');
 const materialNames={mochi:'經典麻糬',crunch:'脆脆史萊姆',clay:'紙黏土',bubble:'泡泡',wrap:'泡泡紙'};
 let currentMaterial='mochi';
+const vibrationSupported=typeof navigator.vibrate==='function';
 let consented=false,soundOn=false,hapticOn=false,audioContext=null,noiseBuffer=null;
 let photoData='',photoBlob=null,lastStretch=0,lastPress=0;
 const cookieName='mochi_sensory';
@@ -21,13 +22,17 @@ function persist(){
 }
 const existing=cookieValue();
 if(existing&&/^v1:[01]:[01]$/.test(existing)){
-  const parts=existing.split(':');consented=true;soundOn=parts[1]==='1';hapticOn=parts[2]==='1';
+  const parts=existing.split(':');consented=true;soundOn=parts[1]==='1';hapticOn=parts[2]==='1'&&vibrationSupported;
 }
 function updateControls(){
   sound.setAttribute('aria-checked',String(soundOn));
   haptic.setAttribute('aria-checked',String(hapticOn));
-  if(!('vibrate' in navigator)){
+  if(!vibrationSupported){
+    haptic.disabled=true;
+    haptic.setAttribute('aria-disabled','true');
     haptic.title='此瀏覽器不支援網頁震動';
+    const detail=haptic.parentElement?.querySelector('.setting-desc');
+    if(detail)detail.textContent='此瀏覽器不支援網頁震動（iOS Safari 通常不支援）';
   }
 }
 function consentOpen(open){
@@ -112,7 +117,7 @@ function feedback(kind,intensity=1){
 window.MochiFeedback=feedback;
 window.MochiMaterial=()=>currentMaterial;
 $('consent-allow').addEventListener('click',()=>{
-  consented=true;soundOn=true;hapticOn=true;persist();updateControls();
+  consented=true;soundOn=true;hapticOn=vibrationSupported;persist();updateControls();
   enableAudio();consentOpen(false);feedback('select');
 });
 $('consent-decline').addEventListener('click',()=>{
