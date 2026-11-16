@@ -1,190 +1,219 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#faf6f1">
-  <meta name="description" content="MOCHI LAB — 用手指揉捏一顆有彈性、有重量、會回彈的數位麻糬。支援多點觸控。">
-  <title>MOCHI LAB — 3D Tear & Heal</title>
-  <style>
-    :root{--ink:#493b3d;--muted:#958a87;--paper:#faf6f1;--line:#e9dfd9;--accent:#d58c98;--ui:#fffdfa}
-    *{box-sizing:border-box}
-    html,body{width:100%;min-height:100%;margin:0}
-    body{font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",sans-serif;color:var(--ink);background:var(--paper);overflow:hidden;-webkit-font-smoothing:antialiased}
-    button,input{font:inherit;-webkit-tap-highlight-color:transparent}
-    button:focus-visible,input:focus-visible{outline:2px solid #ad7a94;outline-offset:3px}
-    .app{position:relative;width:100%;height:100vh;height:100dvh;min-height:400px;overflow:hidden;isolation:isolate;background:radial-gradient(ellipse 50% 52% at 50% 49%,#fceae6 0%,#fbf4ed 67%,#f9f5f0 100%)}
-    .app:before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.38;background-image:radial-gradient(#d9c9c2 0.75px,transparent 0.9px);background-size:23px 23px;mask-image:linear-gradient(to bottom,transparent,#000 22%,#000 80%,transparent)}
-    .wash{position:absolute;inset:-20%;z-index:0;pointer-events:none;background:radial-gradient(circle at 20% 55%,#edc6be58,transparent 31%),radial-gradient(circle at 78% 34%,#ddcee04d,transparent 35%);filter:blur(22px)}
-    .circle{position:absolute;z-index:0;border:1px solid #d3b8b128;border-radius:50%;pointer-events:none}
-    .circle.a{width:min(70vw,770px);aspect-ratio:1;left:50%;top:53%;transform:translate(-50%,-50%)}
-    .circle.b{width:min(56vw,590px);aspect-ratio:1;left:50%;top:53%;transform:translate(-50%,-50%)}
-    .topbar{position:absolute;z-index:7;left:0;right:0;top:0;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:calc(25px + env(safe-area-inset-top)) clamp(22px,4vw,62px)}
-    .identity{display:flex;align-items:center;gap:13px;font-size:11px;font-weight:750;letter-spacing:.18em;white-space:nowrap}
-    .mark{width:32px;height:32px;border-radius:48% 52% 56% 44%;background:linear-gradient(145deg,#fff9f2,#f0a8b6);box-shadow:inset -3px -4px 8px #d88f9a9c,0 3px 9px #cfacaa55;transform:rotate(-13deg)}
-    .edition{font-size:10px;letter-spacing:.19em;color:var(--muted);text-transform:uppercase;white-space:nowrap}
-    .restart{border:1px solid #e3d4d1;background:#fffbf8b9;color:#6b5557;border-radius:999px;padding:10px 17px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.09em;transition:background .18s,transform .18s}
-    .restart:hover{background:#fff;transform:translateY(-2px)}
-    .restart svg{width:14px;height:14px}
-    .headline{position:absolute;z-index:1;top:clamp(90px,12vh,155px);left:0;right:0;text-align:center;pointer-events:none;user-select:none}
-    .eyebrow{font-size:10px;font-weight:700;letter-spacing:.45em;color:#b69996;margin:0 0 13px}
-    h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(66px,11vw,144px);font-weight:400;letter-spacing:-.075em;line-height:.9;color:#d9c7c0a6;margin:0}
-    h1 em{font-style:italic;font-weight:400;color:#d7bcb7ab}
-    .subline{margin-top:18px;color:#b49e9a;font-size:11px;letter-spacing:.22em}
-    #stage{position:absolute;z-index:3;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
-    #stage.grabbing{cursor:grabbing}
-    .side-note{position:absolute;z-index:4;top:50%;left:clamp(20px,4vw,68px);transform:translateY(-50%);pointer-events:none}
-    .side-note .line{width:1px;height:36px;background:#cbb0ad;margin:0 0 18px 1px}
-    .side-note p{font-size:10px;line-height:2.1;letter-spacing:.18em;color:#9e8987;margin:0;text-transform:uppercase}
-    .side-note strong{display:block;font-size:12px;letter-spacing:.06em;color:#775e61;margin-top:3px}
-    .active{position:absolute;z-index:4;right:clamp(20px,4vw,65px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:9px;color:#998580;font-size:10px;font-weight:700;letter-spacing:.12em;pointer-events:none}
-    .active-dot{height:7px;width:7px;border-radius:50%;background:#d1c3be;box-shadow:0 0 0 5px #d1c3be25;transition:background .18s}
-    .active.engaged .active-dot{background:#d77f91;box-shadow:0 0 0 5px #d77f9130}
-    .bottom{position:absolute;z-index:8;bottom:max(22px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:min(780px,calc(100% - 36px));display:flex;flex-direction:column;align-items:center;gap:17px}
-    .instruction{text-align:center;font-size:12px;line-height:1.7;letter-spacing:.12em;color:#886e6e;pointer-events:none;text-shadow:0 1px 4px #fff}
-    .instruction strong{font-weight:750;color:#654e52}
-    .panel{width:100%;min-height:86px;display:flex;justify-content:space-between;align-items:center;gap:22px;background:#fffdfacb;border:1px solid #fff;border-radius:23px;padding:17px 25px;box-shadow:0 15px 50px #98716b15,0 2px 9px #9c726a0a;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
-    .control{display:flex;flex-direction:column;min-width:145px;gap:10px;flex:1}
-    .control-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
-    .control label,.swatches .label{font-size:10px;font-weight:800;letter-spacing:.16em;color:#725c60}
-    .value{font-family:Georgia,serif;font-size:11px;color:#ac9391}
-    input[type=range]{width:100%;margin:0;appearance:none;-webkit-appearance:none;background:transparent;height:15px;cursor:pointer}
-    input[type=range]::-webkit-slider-runnable-track{background:#e7d9d5;height:3px;border-radius:99px}
-    input[type=range]::-moz-range-track{background:#e7d9d5;height:3px;border-radius:99px}
-    input[type=range]::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;margin-top:-6px;width:15px;height:15px;border:3px solid #fff;border-radius:50%;background:#cb8c95;box-shadow:0 1px 5px #ab7e7770}
-    input[type=range]::-moz-range-thumb{width:12px;height:12px;border:3px solid #fff;border-radius:50%;background:#cb8c95;box-shadow:0 1px 5px #ab7e7770}
-    .separator{width:1px;height:37px;background:#eee4df;flex:none}
-    .swatches{display:flex;flex-direction:column;gap:9px;min-width:120px}
-    .swatch-row{display:flex;align-items:center;gap:10px}
-    .swatch{width:23px;height:23px;flex:none;border:2px solid #fff;border-radius:50%;cursor:pointer;box-shadow:0 0 0 1px #d5c1bc80;transition:transform .2s,box-shadow .2s}
-    .swatch:hover{transform:scale(1.14)}
-    .swatch[aria-pressed=true]{box-shadow:0 0 0 2px #816466,0 0 0 4px #fff}
-    .swatch.rose{background:linear-gradient(135deg,#ffebdc,#dd889d)}.swatch.taro{background:linear-gradient(135deg,#f3e9ff,#aa92d7)}.swatch.matcha{background:linear-gradient(135deg,#e7f6d7,#8dbd9c)}
-    .foot{position:absolute;z-index:4;bottom:19px;left:32px;color:#a89a96;font-size:9px;letter-spacing:.2em;pointer-events:none}
-    @media(max-width:900px){.side-note{top:57%;left:22px}.active{top:57%;right:22px}.side-note p{font-size:9px}.active{font-size:9px}}
-    @media(max-width:650px){
-      .topbar{padding:calc(13px + env(safe-area-inset-top)) 18px}
-      .edition{display:none}.identity{font-size:10px}.mark{width:27px;height:27px}
-      .restart{padding:9px 13px;font-size:10px}
-      .headline{top:clamp(96px,15vh,144px)}h1{font-size:clamp(65px,20vw,95px)}
-      .eyebrow{font-size:9px;margin-bottom:10px}.subline{margin-top:12px;font-size:9px}
-      .side-note{top:auto;bottom:clamp(207px,27vh,250px);left:20px;transform:none}
-      .side-note .line{height:18px;margin-bottom:8px}.side-note p{font-size:8px;line-height:1.75}.side-note strong{font-size:9px}
-      .active{top:auto;bottom:clamp(213px,28vh,250px);right:20px;transform:none;font-size:8px}
-      .bottom{width:calc(100% - 24px);bottom:max(12px,env(safe-area-inset-bottom));gap:11px}
-      .instruction{font-size:11px;letter-spacing:.055em}
-      .panel{padding:14px 15px;gap:10px;border-radius:18px;min-height:76px}
-      .control{min-width:0;gap:9px}.control label,.swatches .label{font-size:9px;letter-spacing:.03em}.value{font-size:10px}
-      .separator{height:37px}.swatches{min-width:95px}.swatch-row{gap:8px}.swatch{width:21px;height:21px}
-      .foot{display:none}
-    }
-    @media(max-width:370px){.panel{gap:8px;padding:13px 11px}.swatches{min-width:80px}.swatch-row{gap:5px}.swatch{width:19px;height:19px}.control label{font-size:8px}}
-    @media(max-height:620px){.headline{top:70px}.side-note,.active{display:none}.instruction{display:none}.bottom{bottom:max(9px,env(safe-area-inset-bottom))}.panel{min-height:70px;padding-block:11px}}
-    @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition-duration:0s!important;animation-duration:0s!important}}
-  
-/* WebGL 3D surface: softly blurred drop-shadow behind the actual lit mesh */
-#shadow3d{position:absolute;z-index:2;left:50%;top:58%;width:240px;height:64px;
-  transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
-  background:radial-gradient(ellipse at center,rgba(120,70,84,.31) 0%,rgba(148,88,96,.15) 42%,rgba(148,88,96,0) 75%);
-  filter:blur(14px);opacity:.78;will-change:transform}
-#stage{background:transparent}
-@media(max-width:650px){#shadow3d{filter:blur(11px)}}
-
-/* Numbered color archive, inspired by physical fan-deck color systems */
-.palette-picker{display:flex;flex-direction:column;min-width:120px;gap:8px}
-.palette-picker .label{font-size:10px;font-weight:800;letter-spacing:.14em;color:#725c60;white-space:nowrap}
-.palette-trigger{display:flex;align-items:center;gap:9px;text-align:left;background:transparent;border:0;padding:0;cursor:pointer;color:#554145}
-.palette-current{width:28px;height:28px;flex:none;border-radius:6px;background:#EFB0BB;border:2px solid #fff;box-shadow:0 0 0 1px #cbbcb7}
-.palette-ref{display:flex;flex-direction:column;gap:2px}
-.palette-ref strong{font-family:Georgia,serif;font-size:12px;font-weight:700;letter-spacing:.04em}
-.palette-ref small{font-size:9px;letter-spacing:.08em;color:#9e8a86}
-.palette-trigger svg{width:15px;height:15px;stroke:#8a6a6c;fill:none;stroke-width:1.5}
-.palette-library{position:absolute;z-index:16;right:clamp(17px,4vw,62px);bottom:clamp(132px,18vh,164px);width:min(485px,calc(100% - 32px));max-height:min(590px,calc(100dvh - 180px));display:none;flex-direction:column;gap:16px;background:#fffcf8f4;border:1px solid #fff;border-radius:23px;padding:23px;box-shadow:0 30px 90px #6e51513b,0 4px 20px #9f76701c;backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px)}
-.palette-library.is-open{display:flex}
-.palette-top{display:flex;justify-content:space-between;align-items:start;gap:12px}
-.palette-title{font-family:Georgia,serif;font-size:31px;font-weight:400;letter-spacing:-.065em;color:#534244}
-.palette-kicker{font-size:9px;font-weight:800;color:#ac8d88;letter-spacing:.2em}
-.palette-close{flex:none;background:#f4ece7;border:0;color:#775f5e;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:21px}
-.palette-filters{display:flex;flex-wrap:wrap;gap:5px}
-.palette-filters button{border:1px solid #e9deda;border-radius:100px;padding:7px 10px;background:#fffcf9;color:#7f6c68;font-size:10px;letter-spacing:.06em;cursor:pointer}
-.palette-filters button[aria-pressed=true]{background:#5c474c;color:#fff;border-color:#5c474c}
-.palette-grid{min-height:100px;overflow-y:auto;overscroll-behavior:contain;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:2px 4px 6px 2px}
-.palette-chip{display:flex;flex-direction:column;overflow:hidden;min-width:0;text-align:left;border:1px solid #e7ddda;background:#fff;border-radius:7px;padding:0;cursor:pointer;box-shadow:0 2px 7px #6d4c420a;transition:transform .13s,box-shadow .13s}
-.palette-chip:hover{transform:translateY(-2px);box-shadow:0 5px 18px #6d4c422c}
-.palette-chip[aria-pressed=true]{outline:2px solid #71575c;outline-offset:1px}
-.chip-face{display:block;height:65px;width:100%;flex:none}
-.chip-detail{display:flex;flex-direction:column;min-width:0;gap:4px;padding:8px 7px 9px}
-.chip-detail strong{font-size:10px;color:#4d3c40;letter-spacing:.05em}
-.chip-detail small{font-family:Georgia,serif;font-size:9px;color:#8f7a75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.palette-current-info{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid #ede4dd;padding-top:12px}
-.palette-current-info strong{font-size:11px;letter-spacing:.07em}
-.palette-note{font-size:9px;line-height:1.6;color:#a0908b;max-width:210px;text-align:right}
-.material-state{position:absolute;z-index:4;left:50%;bottom:clamp(156px,20vh,190px);transform:translateX(-50%);font-size:10px;letter-spacing:.16em;text-align:center;white-space:nowrap;color:#9a7f7b;font-weight:700;pointer-events:none;text-shadow:0 1px 4px #fff}
-.material-state.torn{color:#bd5a70}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#f6f0f1">
+<meta name="description" content="MOCHI LAB · 可以按壓、拉斷、黏合、拍照的 3D 療癒材質遊樂場。">
+<title>MOCHI LAB · Soft Matter Playground</title>
+<style>
+:root{--ink:#44393f;--muted:#948790;--line:#e6dce2;--chosen-color:#EFB0BB;--glass:rgba(255,255,255,.69)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;-webkit-text-size-adjust:100%;touch-action:pan-x pan-y}
+body{color:var(--ink);background:#f5eef0;font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;-webkit-font-smoothing:antialiased}
+body,.app,.app *{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+button,input{font:inherit}button{cursor:pointer;color:inherit}button:focus-visible,input:focus-visible{outline:2px solid #a56e96;outline-offset:3px}
+button:disabled{opacity:.4;cursor:not-allowed}
+.app{width:100%;height:100vh;height:100dvh;min-height:340px;overflow:hidden;position:relative;isolation:isolate;background:radial-gradient(ellipse at 48% 43%,#f9e9ec 0%,#faf4f0 49%,#eeecf1 100%);touch-action:none}
+.app:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.44;background:radial-gradient(circle at 20% 62%,#f0bbcc66,transparent 37%),radial-gradient(circle at 86% 17%,#e1cfec7d,transparent 32%);filter:blur(34px)}
+.orbit{position:absolute;left:50%;top:50%;border-radius:50%;border:1px solid #cfbfc631;transform:translate(-50%,-50%);pointer-events:none}
+.orbit.a{width:min(82vw,810px);aspect-ratio:1}.orbit.b{width:min(64vw,640px);aspect-ratio:1}
+.top{position:absolute;z-index:8;top:0;left:0;right:0;padding:calc(16px + env(safe-area-inset-top)) clamp(16px,4vw,54px);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.brand{display:flex;align-items:center;gap:11px;letter-spacing:.18em;font-size:11px;font-weight:800}
+.brand-dot{width:33px;height:33px;border-radius:52% 48% 60% 40%;background:linear-gradient(140deg,#fffbef,#eba0b8);box-shadow:inset -3px -5px 7px #b96c9488,0 2px 13px #c58ea069}
+.brand small{display:block;font-weight:550;letter-spacing:.24em;font-size:9px;color:#a18d9c;margin-top:5px}
+.top-actions{display:flex;gap:9px}
+.icon-btn{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;border:1px solid #fff;background:#fffaf9aa;box-shadow:0 4px 19px #927f8720;backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px)}
+.icon-btn svg{width:19px;height:19px;stroke:#65565f;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.hero{position:absolute;z-index:1;pointer-events:none;top:clamp(93px,14vh,151px);width:100%;text-align:center}
+.hero .eyebrow{font-size:10px;letter-spacing:.42em;color:#b69ca9;font-weight:750}
+.hero h1{font-family:Georgia,serif;font-weight:400;letter-spacing:-.08em;font-size:clamp(68px,12vw,151px);line-height:.95;margin:13px 0 7px;color:#d6c3cba0}
+.hero h1 em{font-style:italic;color:#d6b0c6ae}
+.hero p{font-size:10px;letter-spacing:.22em;color:#aa98a1}
+#stage{position:absolute;z-index:3;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#stage.grabbing{cursor:grabbing}
+#shadow3d{position:absolute;z-index:2;left:50%;top:58%;width:250px;height:70px;pointer-events:none;border-radius:50%;filter:blur(13px);opacity:.86;transform:translate(-50%,-50%);background:radial-gradient(ellipse,rgba(110,68,94,.30),rgba(137,85,111,.12) 48%,transparent 74%)}
+.sidetext{position:absolute;z-index:4;left:clamp(17px,4vw,54px);top:52%;transform:translateY(-50%);pointer-events:none;color:#ad919f;font-size:10px;letter-spacing:.15em;line-height:2}
+.sidetext strong{display:block;color:#856c7c;font-size:13px;letter-spacing:.04em}
+.indicator{position:absolute;z-index:4;right:clamp(18px,4vw,55px);top:52%;transform:translateY(-50%);font-size:10px;letter-spacing:.12em;display:flex;gap:8px;align-items:center;pointer-events:none;color:#a3919a}
+.indicator .dot{width:7px;height:7px;border-radius:50%;background:#ccc0c8;box-shadow:0 0 0 5px #b5a5b120}
+.indicator.engaged .dot{background:#d9789d;box-shadow:0 0 0 5px #d9789d28}
+.material-state{position:absolute;z-index:4;bottom:max(160px,20vh);left:50%;transform:translateX(-50%);white-space:nowrap;max-width:95vw;overflow:hidden;text-overflow:ellipsis;color:#a78b99;font-weight:700;font-size:10px;letter-spacing:.13em;text-align:center;pointer-events:none}
+.material-state.torn{color:#b65c80}
+.dock{position:absolute;z-index:12;left:50%;bottom:calc(17px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(510px,calc(100% - 26px));border:1px solid #fff9;border-radius:27px;padding:11px 13px;display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.67);backdrop-filter:blur(34px) saturate(165%);-webkit-backdrop-filter:blur(34px) saturate(165%);box-shadow:0 15px 55px #956d8a2b,0 2px 11px #80587916;touch-action:pan-y}
+.dock-handle{width:36px;height:5px;border-radius:99px;background:#bdadb8;position:absolute;left:50%;top:5px;transform:translateX(-50%);pointer-events:none}
+.dock-main{display:flex;gap:11px;align-items:center;flex:1;text-align:left;border:0;background:transparent;padding:10px 6px 6px;min-width:0}
+.material-orb{flex:none;height:34px;width:34px;border-radius:50%;background:radial-gradient(circle at 32% 28%,#fff9f5,var(--chosen-color) 67%,#85526d);box-shadow:inset -2px -3px 7px #9a648050}
+.dock-label{display:flex;flex-direction:column;gap:4px;min-width:0}.dock-label strong{font-size:12px;letter-spacing:.04em}.dock-label small{font-size:10px;color:#9e8b98}
+.dock-up{width:17px;height:17px;stroke:#968491;fill:none;stroke-width:2;margin-left:auto}
+.dock-camera{width:44px;height:44px;display:grid;place-items:center;border:0;border-radius:17px;color:#fff;background:#6e586a;box-shadow:0 5px 12px #5d415d3b}
+.dock-camera svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7}
+.sheet-backdrop{position:absolute;z-index:14;inset:0;background:#27202c50;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}
+.sheet-backdrop.is-open{opacity:1;visibility:visible}
+.settings-sheet{position:absolute;z-index:15;bottom:0;left:50%;width:min(740px,100%);height:min(83dvh,770px);transform:translate(-50%,105%);transition:transform .42s cubic-bezier(.2,.85,.23,1);background:rgba(250,249,252,.83);border:1px solid #fff9;border-bottom:0;border-radius:32px 32px 0 0;box-shadow:0 -20px 85px #56435b44;backdrop-filter:blur(48px) saturate(160%);-webkit-backdrop-filter:blur(48px) saturate(160%);display:flex;flex-direction:column;touch-action:pan-y}
+.settings-sheet.is-open{transform:translate(-50%,0)}
+.sheet-grab{height:31px;flex:none;border:0;background:transparent;display:grid;place-items:center;touch-action:none}
+.sheet-grab span{width:39px;height:5px;border-radius:99px;background:#b8b2ba}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:2px 26px 14px}
+.sheet-head h2{font-size:23px;letter-spacing:-.04em;margin:0}.sheet-head p{font-size:11px;color:#978c99;margin:5px 0 0}
+.sheet-close{border:0;width:29px;height:29px;border-radius:50%;background:#d7d4da99;color:#736977;font-size:22px;display:grid;place-items:center}
+.sheet-scroll{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;min-height:0;padding:0 23px calc(28px + env(safe-area-inset-bottom));touch-action:pan-y}
+.section-label{font-size:10px;font-weight:800;letter-spacing:.18em;color:#867c8c;margin:19px 2px 9px}
+.group{background:#fff9;border:1px solid #ffffffc4;border-radius:21px;overflow:hidden;box-shadow:0 2px 12px #8a7b9513}
+.material-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+.material-tile{border:1px solid #ffffffc4;background:#fff9;border-radius:17px;padding:12px 4px 11px;display:flex;align-items:center;flex-direction:column;gap:6px;min-width:0}
+.material-tile[aria-pressed=true]{outline:2px solid #9d7f9c;outline-offset:-2px;background:#fff}
+.material-mini{width:43px;height:43px;border-radius:50%;box-shadow:inset -4px -7px 10px #74547744,0 3px 9px #987d901c;background:radial-gradient(circle at 29% 25%,#fff5ed,#ebb2c2 55%,#b77195)}
+.material-tile[data-material=crunch] .material-mini{background:radial-gradient(circle at 30% 27%,#fff,#8bd4b7 48%,#479a8b);border:3px dotted #e1fff9}
+.material-tile[data-material=clay] .material-mini{border-radius:45% 52% 39% 52%;background:radial-gradient(circle at 29% 25%,#faf3dd,#d2ba9f 60%,#ab927d)}
+.material-tile[data-material=bubble] .material-mini{background:radial-gradient(circle at 23% 18%,#fff9,transparent 30%),radial-gradient(circle at 80% 83%,#a4d1f1aa,transparent 40%),radial-gradient(circle,#e0c2ed66,#fff9b122 58%,#c2dce8aa);border:1px solid #fff}
+.material-tile[data-material=wrap] .material-mini{background:radial-gradient(circle at 33% 29%,#fff,#c7e2f2 50%,#92b7dc);border:3px dotted #e4eefc}
+.material-tile strong{font-size:11px}.material-tile small{font-size:9px;color:#998d98}
+.row-setting{min-height:67px;display:flex;align-items:center;justify-content:space-between;padding:12px 17px;gap:14px}
+.row-setting+.row-setting{border-top:1px solid #e6e1e7}
+.setting-name{display:block;font-size:13px;font-weight:700}.setting-desc{display:block;margin-top:5px;font-size:10px;color:#9b909b;line-height:1.4}
+.range-wrap{width:min(45%,220px)}.range-head{display:flex;justify-content:flex-end;gap:10px;align-items:center;font-size:11px;color:#a28a9b}
+input[type=range]{width:100%;accent-color:#a3839b;touch-action:pan-x}
+.pill-toggle{width:51px;height:30px;border-radius:99px;border:0;padding:3px;background:#d0cdd3;display:flex;align-items:center;justify-content:flex-start;flex:none;transition:background .2s}
+.pill-toggle:after{content:"";width:24px;height:24px;border-radius:50%;background:white;box-shadow:0 2px 4px #3332;transition:transform .2s}
+.pill-toggle[aria-checked=true]{background:#a383ad}
+.pill-toggle[aria-checked=true]:after{transform:translateX(21px)}
+.palette-trigger{border:0;background:#fff9;border-radius:15px;padding:11px 16px;display:flex;gap:13px;align-items:center;width:100%;text-align:left}
+.palette-current{width:33px;height:33px;border-radius:8px;border:2px solid white;box-shadow:0 1px 5px #48304d2d;background:#EFB0BB}
+.palette-ref{display:flex;flex-direction:column;gap:3px}.palette-ref strong{font-size:12px}.palette-ref small{font-size:10px;color:#9c8e9d}
+.palette-trigger svg{margin-left:auto;width:16px;height:16px;stroke:#998a9c;fill:none;stroke-width:1.7}
+.privacy-note{font-size:10px;color:#a097a1;line-height:1.7;margin:10px 4px 0}
+.sheet-actions{display:flex;gap:9px;margin:15px 0}
+.sheet-actions button{flex:1;border:1px solid #e3d9e6;border-radius:15px;padding:12px 10px;font-size:12px;font-weight:750;background:#fff9}
+.sheet-actions button.primary{background:#655265;color:#fff;border-color:#655265}
+.palette-library{position:absolute;z-index:20;bottom:0;left:50%;width:min(740px,100%);height:min(82dvh,740px);transform:translate(-50%,105%);transition:transform .33s;background:#fcfafcf5;border-radius:31px 31px 0 0;padding:25px clamp(16px,4vw,32px) calc(25px + env(safe-area-inset-bottom));box-shadow:0 -16px 60px #56425a36;backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);display:flex;flex-direction:column;gap:15px}
+.palette-library.is-open{transform:translate(-50%,0)}
+.palette-top{display:flex;align-items:start;justify-content:space-between}.palette-kicker{font-size:9px;font-weight:800;letter-spacing:.16em;color:#a28ca0}.palette-title{font-family:Georgia,serif;font-weight:400;font-size:34px;letter-spacing:-.05em}.palette-close{border:0;background:#e8e2ea;border-radius:50%;width:31px;height:31px;font-size:21px}
+.palette-filters{display:flex;flex-wrap:wrap;gap:6px}.palette-filters button{border:1px solid #e5dce6;background:#fff8;color:#877787;border-radius:100px;padding:8px 10px;font-size:10px}
+.palette-filters button[aria-pressed=true]{background:#6d586f;color:white}
+.palette-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;overflow-y:auto;min-height:0;flex:1;overscroll-behavior:contain;touch-action:pan-y}
+.palette-chip{border:1px solid #e5dfe5;padding:0;min-width:0;border-radius:10px;background:white;text-align:left;overflow:hidden}
+.palette-chip[aria-pressed=true]{outline:2px solid #6a536c;outline-offset:-2px}
+.chip-face{height:65px;display:block}.chip-detail{display:flex;flex-direction:column;gap:4px;padding:7px}
+.chip-detail strong{font-size:10px}.chip-detail small{font:10px Georgia,serif;color:#9a8a99;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.palette-current-info{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:11px;border-top:1px solid #e9e2e9;padding-top:12px}
+.palette-note{font-size:9px;color:#a0939f;text-align:right;max-width:180px}
+.consent-backdrop,.photo-backdrop{position:absolute;z-index:30;inset:0;background:#32283b85;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.consent-backdrop.is-open,.photo-backdrop.is-open{display:flex}
+.consent-box,.photo-box{background:#fffcfff2;border:1px solid #fff8;box-shadow:0 24px 75px #2a182b38;width:min(420px,100%);max-height:90dvh;overflow:auto;border-radius:27px;padding:25px;touch-action:pan-y}
+.consent-icon{width:52px;height:52px;border-radius:17px;background:#eee1ef;display:grid;place-items:center;font-size:25px}
+.consent-box h2,.photo-box h2{margin:18px 0 8px;font-size:22px;letter-spacing:-.03em}
+.consent-box p,.photo-box p{font-size:12px;line-height:1.75;color:#827684}
+.consent-actions{display:flex;gap:9px;margin-top:22px}
+.consent-actions button,.photo-actions button{flex:1;border:0;border-radius:14px;padding:12px 8px;background:#eae3eb;font-size:12px;font-weight:750}
+.consent-actions button.primary,.photo-actions button.primary{background:#6d596f;color:#fff}
+.consent-foot{display:block;margin-top:12px;font-size:10px;line-height:1.5;color:#a296a0}
+.photo-box{width:min(490px,100%)}.photo-head{display:flex;justify-content:space-between;align-items:center}.photo-head h2{margin:0}
+.photo-preview{width:100%;max-height:59dvh;object-fit:contain;border-radius:16px;background:#f6eff4;margin-top:15px}
+.photo-actions{display:flex;gap:10px;margin-top:14px}.photo-close{border:0;background:#e5dbe7;border-radius:50%;width:29px;height:29px;font-size:20px}
+#flash{position:absolute;z-index:28;inset:0;background:#fff;pointer-events:none;opacity:0;transition:opacity .2s}
+#flash.flash{opacity:.88;transition:none}
 @media(max-width:650px){
-  .palette-picker{min-width:91px;gap:8px}.palette-picker .label{font-size:9px;letter-spacing:.01em}
-  .palette-current{width:23px;height:23px}.palette-trigger{gap:5px}.palette-trigger svg{width:12px}
-  .palette-ref strong{font-size:11px}.palette-ref small{font-size:8px}
-  .palette-library{right:12px;bottom:max(118px,calc(112px + env(safe-area-inset-bottom)));padding:17px;gap:12px;max-height:calc(100dvh - 195px);border-radius:17px}
-  .palette-title{font-size:28px}.palette-grid{gap:7px}
-  .chip-face{height:51px}.chip-detail{padding:6px 5px 7px}.chip-detail strong{font-size:9px}.chip-detail small{font-size:8px}
-  .material-state{bottom:clamp(170px,24vh,220px);font-size:9px;max-width:95%;overflow:hidden;text-overflow:ellipsis}
+ .top{padding:calc(13px + env(safe-area-inset-top)) 17px}.brand{font-size:10px}.brand-dot{width:27px;height:27px}.brand small{font-size:8px}
+ .icon-btn{width:37px;height:37px}.hero{top:clamp(101px,15vh,137px)}
+ .hero h1{font-size:clamp(64px,19vw,99px)}.hero .eyebrow,.hero p{font-size:9px}
+ .sidetext{left:16px;top:auto;bottom:clamp(185px,26vh,246px);transform:none;font-size:8px}.sidetext strong{font-size:10px}
+ .indicator{right:14px;top:auto;bottom:clamp(185px,27vh,246px);transform:none;font-size:8px}
+ .material-state{bottom:clamp(133px,18vh,162px);font-size:9px}
+ .dock{bottom:calc(9px + env(safe-area-inset-bottom));border-radius:22px}
+ .settings-sheet{height:min(86dvh,770px);border-radius:27px 27px 0 0}
+ .sheet-scroll{padding:0 14px calc(25px + env(safe-area-inset-bottom))}
+ .sheet-head{padding-inline:18px}
+ .material-grid{gap:5px}.material-tile{border-radius:13px;padding:10px 3px}.material-mini{width:35px;height:35px}.material-tile strong{font-size:10px}.material-tile small{font-size:8px}
+ .palette-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.chip-face{height:58px}
 }
-@media(max-height:620px){.palette-library{bottom:91px;max-height:calc(100dvh - 108px)}.material-state{display:none}}
+@media(max-height:620px){.hero{top:65px}.sidetext,.indicator,.material-state{display:none}.settings-sheet{height:95dvh}}
+@media(prefers-reduced-motion:reduce){.settings-sheet,.palette-library,.sheet-backdrop{transition:none}}
 </style>
 </head>
 <body>
-<main class="app" aria-label="麻糬物理互動實驗室">
-  <div class="wash" aria-hidden="true"></div>
-  <div class="circle a" aria-hidden="true"></div><div class="circle b" aria-hidden="true"></div>
-  <header class="topbar">
-    <div class="identity"><span class="mark" aria-hidden="true"></span><span>SOFT MATTER STUDIO</span><span class="edition">/ EXPERIMENT NO. 001</span></div>
-    <button class="restart" id="reset" type="button" aria-label="重置麻糬形狀"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11a9 9 0 1 1 2.5 6.5"/><path d="M3 4v7h7"/></svg>重新揉捏</button>
-  </header>
-  <div class="headline" aria-hidden="true">
-    <p class="eyebrow">A LITTLE SOFTER EVERY DAY</p>
-    <h1>mochi<em>.</em></h1>
-    <div class="subline">THE INTERACTIVE SQUISH EXPERIMENT</div>
+<main class="app" id="app" aria-label="MOCHI LAB 3D 材質實驗室">
+<div class="orbit a" aria-hidden="true"></div><div class="orbit b" aria-hidden="true"></div>
+<header class="top">
+  <div class="brand"><div class="brand-dot" aria-hidden="true"></div><div>SOFT MATTER STUDIO<small>TACTILE EXPERIMENT · 002</small></div></div>
+  <div class="top-actions">
+    <button id="reset" class="icon-btn" aria-label="重置作品" title="重新開始"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 1 2.2 5.6"/><path d="M4 5v7h7"/></svg></button>
+    <button id="capture" class="icon-btn" aria-label="拍攝作品" title="成品拍照"><svg viewBox="0 0 24 24"><path d="M4 7h4l2-2h4l2 2h4v12H4z"/><circle cx="12" cy="13" r="4"/></svg></button>
   </div>
-  <div id="shadow3d" aria-hidden="true"></div>
-  <canvas id="stage" aria-label="可單指按出3D凹陷、多指拉伸的立體軟彈麻糬"></canvas>
-  <div class="side-note" aria-hidden="true"><div class="line"></div><p>TOUCH / STRETCH<br>SQUISH / RELEASE</p><strong>隨心揉捏</strong></div>
-  <div class="active" id="active" aria-live="polite"><span class="active-dot"></span><span id="active-text">READY TO SQUISH</span></div>
-  <section class="bottom" aria-label="物理材質控制">
-    <div class="instruction"><strong>伸出手指，揉一揉。</strong> 單指壓出凹痕，多指拉斷；把兩塊靠近就能重新黏合。</div>
-    <div class="panel">
-      <div class="control"><div class="control-head"><label for="spring">彈性 ELASTICITY</label><span class="value" id="spring-value">07</span></div><input id="spring" type="range" min="1" max="10" value="7" aria-label="彈性"></div>
-      <span class="separator" aria-hidden="true"></span>
-      <div class="control"><div class="control-head"><label for="viscosity">黏性 VISCOSITY</label><span class="value" id="viscosity-value">06</span></div><input id="viscosity" type="range" min="1" max="10" value="6" aria-label="黏性"></div>
-      <span class="separator" aria-hidden="true"></span>
-      <div class="palette-picker"><span class="label">色盤 COLOR ATLAS</span>
-        <button class="palette-trigger" id="palette-trigger" type="button" aria-expanded="false" aria-controls="palette-library" aria-label="開啟色盤">
-          <span class="palette-current" id="palette-current"></span>
-          <span class="palette-ref"><strong id="selected-code">ML-101</strong><small>20 COLORS</small></span>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5"/></svg>
-        </button>
-      </div>
+</header>
+<div class="hero"><div class="eyebrow">T O U C H  ·  S T R E T C H  ·  H E A L</div><h1>mochi<em>.</em></h1><p>AN INTERACTIVE SOFT MATERIAL PLAYGROUND</p></div>
+<div id="shadow3d" aria-hidden="true"></div>
+<canvas id="stage" aria-label="多點觸控軟性物體，按壓可凹陷，拉伸可斷裂並黏合"></canvas>
+<div class="sidetext" aria-hidden="true">PRESS / PULL / POP<strong>隨心揉捏</strong></div>
+<div class="indicator" id="active"><span class="dot"></span><span id="active-text">READY TO SQUISH</span></div>
+<div id="tear-hint" class="material-state" role="status">TOUCH TO BEGIN · 用指尖碰觸</div>
+<div class="dock" id="settings-dock">
+  <div class="dock-handle"></div>
+  <button type="button" class="dock-main" id="settings-open" aria-expanded="false" aria-controls="settings-sheet">
+    <span class="material-orb"></span>
+    <span class="dock-label"><strong id="dock-material">經典麻糬</strong><small>上滑選擇材質與設定</small></span>
+    <svg class="dock-up" viewBox="0 0 24 24"><path d="m6 15 6-6 6 6"/></svg>
+  </button>
+  <button type="button" class="dock-camera" id="dock-capture" aria-label="拍照並儲存成品"><svg viewBox="0 0 24 24"><path d="M4 7h4l2-2h4l2 2h4v12H4z"/><circle cx="12" cy="13" r="4"/></svg></button>
+</div>
+<div id="sheet-backdrop" class="sheet-backdrop" aria-hidden="true"></div>
+<section class="settings-sheet" id="settings-sheet" role="dialog" aria-label="設定與材質" aria-modal="false" aria-hidden="true">
+  <button class="sheet-grab" id="sheet-grab" aria-label="下滑關閉設定"><span></span></button>
+  <div class="sheet-head"><div><h2>材質與手感</h2><p>Personalize your little soft world.</p></div><button class="sheet-close" id="settings-close" aria-label="關閉設定">×</button></div>
+  <div class="sheet-scroll">
+    <div class="section-label">MATERIAL / 材質</div>
+    <div class="material-grid" role="group" aria-label="選擇材質">
+      <button class="material-tile" data-material="mochi" aria-pressed="true"><span class="material-mini"></span><strong>經典麻糬</strong><small>Q 彈黏合</small></button>
+      <button class="material-tile" data-material="crunch" aria-pressed="false"><span class="material-mini"></span><strong>脆脆史萊姆</strong><small>爆粒脆響</small></button>
+      <button class="material-tile" data-material="clay" aria-pressed="false"><span class="material-mini"></span><strong>紙黏土</strong><small>乾燥塑形</small></button>
+      <button class="material-tile" data-material="bubble" aria-pressed="false"><span class="material-mini"></span><strong>泡泡</strong><small>柔薄爆破</small></button>
+      <button class="material-tile" data-material="wrap" aria-pressed="false"><span class="material-mini"></span><strong>泡泡紙</strong><small>逐顆戳破</small></button>
     </div>
-  </section>
-  <aside id="palette-library" class="palette-library" aria-hidden="true" aria-label="設計色彩圖鑑">
-    <div class="palette-top">
-      <div><div class="palette-kicker">THE SOFT CHROMA ARCHIVE / VOL. 01</div><div class="palette-title">Color Library.</div></div>
-      <button class="palette-close" type="button" aria-label="關閉色盤">×</button>
+    <div class="section-label">TUNE / 手感</div>
+    <div class="group">
+      <div class="row-setting"><div><span class="setting-name">彈性</span><span class="setting-desc">越高越能拉長，回彈越快</span></div><div class="range-wrap"><div class="range-head">ELASTICITY <span id="spring-value">07</span></div><input id="spring" type="range" min="1" max="10" value="7" aria-label="彈性"></div></div>
+      <div class="row-setting"><div><span class="setting-name">黏性</span><span class="setting-desc">控制阻力與緩慢游回速度</span></div><div class="range-wrap"><div class="range-head">VISCOSITY <span id="viscosity-value">06</span></div><input id="viscosity" type="range" min="1" max="10" value="6" aria-label="黏性"></div></div>
     </div>
-    <div class="palette-filters" role="group" aria-label="色系篩選">
-      <button data-family="all" aria-pressed="true">ALL</button>
-      <button data-family="pink" aria-pressed="false">ROSE</button>
-      <button data-family="violet" aria-pressed="false">VIOLET</button>
-      <button data-family="green" aria-pressed="false">GREEN</button>
-      <button data-family="neutral" aria-pressed="false">NEUTRAL</button>
-      <button data-family="blue" aria-pressed="false">BLUE</button>
+    <div class="section-label">COLOR / 色彩圖鑑</div>
+    <div class="group"><button type="button" class="palette-trigger" id="palette-trigger" aria-expanded="false" aria-controls="palette-library">
+      <span class="palette-current" id="palette-current"></span><span class="palette-ref"><strong id="selected-code">ML-101</strong><small id="selected-name">Blush Veil / 薄霧玫瑰</small></span>
+      <svg viewBox="0 0 24 24"><path d="m8 5 7 7-7 7"/></svg>
+    </button></div>
+    <div class="section-label">SENSORY / 聲音與觸感</div>
+    <div class="group">
+      <div class="row-setting"><div><span class="setting-name">互動音效</span><span class="setting-desc">拉伸、斷裂、氣泡與黏合聲</span></div><button type="button" id="sound-toggle" class="pill-toggle" role="switch" aria-label="音效" aria-checked="false"></button></div>
+      <div class="row-setting"><div><span class="setting-name">震動回饋</span><span class="setting-desc">裝置與瀏覽器支援時才會震動</span></div><button type="button" id="haptic-toggle" class="pill-toggle" role="switch" aria-label="震動" aria-checked="false"></button></div>
     </div>
-    <div class="palette-grid" id="palette-grid" role="group" aria-label="可選顏色"></div>
-    <div class="palette-current-info"><strong id="selected-name">Blush Veil / 薄霧玫瑰</strong><span class="palette-note">ML 為自訂色號，並非 Pantone 官方色號。</span></div>
-  </aside>
-  <div id="tear-hint" class="material-state" role="status">STRETCH TO TEAR · 拉至極限可撕裂</div>
-  <div class="foot">MADE TO BE TOUCHED · 2026</div>
+    <p class="privacy-note">首次啟用時將詢問同意。同意後以第一方 Cookie 記住這兩項偏好；不同意則不寫入偏好 Cookie。iOS Safari 通常不支援網頁震動，系統音量與靜音模式也可能限制播放。</p>
+    <div class="sheet-actions"><button id="sheet-reset" type="button">恢復原狀</button><button class="primary" id="sheet-camera" type="button">拍攝成品</button></div>
+  </div>
+</section>
+<aside class="palette-library" id="palette-library" aria-hidden="true" aria-label="色彩圖鑑">
+  <div class="palette-top"><div><div class="palette-kicker">SOFT CHROMA ARCHIVE / VOL. 01</div><div class="palette-title">Color Library.</div></div><button class="palette-close" aria-label="返回設定">×</button></div>
+  <div class="palette-filters" role="group" aria-label="色系">
+    <button data-family="all" aria-pressed="true">ALL</button><button data-family="pink" aria-pressed="false">ROSE</button>
+    <button data-family="violet" aria-pressed="false">VIOLET</button><button data-family="green" aria-pressed="false">GREEN</button>
+    <button data-family="neutral" aria-pressed="false">NEUTRAL</button><button data-family="blue" aria-pressed="false">BLUE</button>
+  </div>
+  <div class="palette-grid" id="palette-grid" role="group" aria-label="色票清單"></div>
+  <div class="palette-current-info"><strong>20 ORIGINAL COLOR CARDS</strong><span class="palette-note">ML 自訂色號；非 Pantone 官方配色。</span></div>
+</aside>
+<div class="consent-backdrop" id="consent-dialog" role="dialog" aria-modal="true" aria-label="音效與震動同意" aria-hidden="true">
+  <div class="consent-box"><div class="consent-icon" aria-hidden="true">♫</div><h2>讓觸感更真實？</h2>
+    <p>啟用合成音效與裝置支援的震動，拉斷、泡泡破裂及黏合會有聲音回饋。僅在你同意後啟用並以第一方 Cookie 記住偏好。</p>
+    <div class="consent-actions"><button id="consent-decline">保持靜音</button><button class="primary" id="consent-allow">允許音效與震動</button></div>
+    <span class="consent-foot">不蒐集個人資料。Safari 的震動與音效能否觸發仍取決於裝置支援及系統設定。</span>
+  </div>
+</div>
+<div class="photo-backdrop" id="photo-dialog" role="dialog" aria-modal="true" aria-label="成品照片預覽" aria-hidden="true">
+  <div class="photo-box"><div class="photo-head"><h2>你的柔軟作品</h2><button class="photo-close" id="photo-close" aria-label="關閉照片">×</button></div>
+    <img id="photo-image" class="photo-preview" alt="目前作品的擷取照片">
+    <p>可下載 PNG，或使用手機分享選單儲存到照片。iOS 也可長按圖片儲存。</p>
+    <div class="photo-actions"><button id="photo-download" class="primary">儲存 PNG</button><button id="photo-share">分享照片</button></div>
+  </div>
+</div>
+<div id="flash" aria-hidden="true"></div>
 </main>
 <script src="mochi-3d.js" defer></script>
-</body>
-</html>
+<script src="mochi-ui.js" defer></script>
+</body></html>
