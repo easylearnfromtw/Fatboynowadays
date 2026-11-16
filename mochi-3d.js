@@ -65,7 +65,7 @@
       float lightness=clamp(0.12+lambert*0.67+fill*0.12,0.0,1.0);
       vec3 color=mix(uShadeColor,uBaseColor,lightness);
       color=mix(color,uLightColor,clamp(0.10+lambert*0.36+vPosition.y*0.08,0.0,0.57));
-      float lowerShadow=smoothstep(0.20,-1.02,vPosition.y)*0.12;
+      float lowerShadow=(1.0-smoothstep(-1.02,0.20,vPosition.y))*0.12;
       color*=1.0-lowerShadow;
       // Contact occlusion follows each depressed fingertip in 3D.
       color*=1.0-occlusion*0.40;
