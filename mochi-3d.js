@@ -351,7 +351,9 @@
     // A small yield interval reveals the neck thinning before fracture.
     if(fractureCharge<.42)return;
     const force=clamp((strain-1)*.83+speed*.32+fractureCharge*.38,0,1);
-    const cutRatio=clamp(.5+asymmetry*(.12+force*.23),.23,.77);
+    // Larger, faster pulls yield a more asymmetric fracture even when both hands pull evenly.
+    const forceBias=(asymmetry>=0?1:-1)*(.025+force*.20);
+    const cutRatio=clamp(.5+asymmetry*.13+forceBias,.23,.77);
     const smallVolume=cutRatio,largeVolume=1-cutRatio;
     const sizes=[.70*Math.cbrt(smallVolume/.5),.70*Math.cbrt(largeVolume/.5)];
     const opening=clamp(1.38+(strain-1)*.39,1.38,2.40);
