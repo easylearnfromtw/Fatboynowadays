@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#faf6f1">
   <meta name="description" content="MOCHI LAB — 用手指揉捏一顆有彈性、有重量、會回彈的數位麻糬。支援多點觸控。">
-  <title>MOCHI LAB — A little softer</title>
+  <title>MOCHI LAB — 3D Soft Touch</title>
   <style>
     :root{--ink:#493b3d;--muted:#958a87;--paper:#faf6f1;--line:#e9dfd9;--accent:#d58c98;--ui:#fffdfa}
     *{box-sizing:border-box}
@@ -81,7 +81,15 @@
     @media(max-width:370px){.panel{gap:8px;padding:13px 11px}.swatches{min-width:80px}.swatch-row{gap:5px}.swatch{width:19px;height:19px}.control label{font-size:8px}}
     @media(max-height:620px){.headline{top:70px}.side-note,.active{display:none}.instruction{display:none}.bottom{bottom:max(9px,env(safe-area-inset-bottom))}.panel{min-height:70px;padding-block:11px}}
     @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition-duration:0s!important;animation-duration:0s!important}}
-  </style>
+  
+/* WebGL 3D surface: softly blurred drop-shadow behind the actual lit mesh */
+#shadow3d{position:absolute;z-index:2;left:50%;top:58%;width:240px;height:64px;
+  transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
+  background:radial-gradient(ellipse at center,rgba(120,70,84,.31) 0%,rgba(148,88,96,.15) 42%,rgba(148,88,96,0) 75%);
+  filter:blur(14px);opacity:.78;will-change:transform}
+#stage{background:transparent}
+@media(max-width:650px){#shadow3d{filter:blur(11px)}}
+</style>
 </head>
 <body>
 <main class="app" aria-label="麻糬物理互動實驗室">
@@ -96,11 +104,12 @@
     <h1>mochi<em>.</em></h1>
     <div class="subline">THE INTERACTIVE SQUISH EXPERIMENT</div>
   </div>
-  <canvas id="stage" aria-label="可用單指或多指拖動拉伸的軟彈麻糬"></canvas>
+  <div id="shadow3d" aria-hidden="true"></div>
+  <canvas id="stage" aria-label="可單指按出3D凹陷、多指拉伸的立體軟彈麻糬"></canvas>
   <div class="side-note" aria-hidden="true"><div class="line"></div><p>TOUCH / STRETCH<br>SQUISH / RELEASE</p><strong>隨心揉捏</strong></div>
   <div class="active" id="active" aria-live="polite"><span class="active-dot"></span><span id="active-text">READY TO SQUISH</span></div>
   <section class="bottom" aria-label="物理材質控制">
-    <div class="instruction"><strong>伸出手指，揉一揉。</strong> 雙指拉長、捏扁，放開後看它慢慢回彈。</div>
+    <div class="instruction"><strong>伸出手指，揉一揉。</strong> 單指按出凹陷與陰影，多指拉伸，鬆手後柔軟回彈。</div>
     <div class="panel">
       <div class="control"><div class="control-head"><label for="spring">彈性 ELASTICITY</label><span class="value" id="spring-value">07</span></div><input id="spring" type="range" min="1" max="10" value="7" aria-label="彈性"></div>
       <span class="separator" aria-hidden="true"></span>
@@ -115,337 +124,6 @@
   </section>
   <div class="foot">MADE TO BE TOUCHED · 2026</div>
 </main>
-<script>
-(function(){
-  'use strict';
-  var canvas=document.getElementById('stage');
-  var ctx=canvas.getContext('2d',{alpha:true});
-  if(!ctx)return;
-  var reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var springInput=document.getElementById('spring'),viscInput=document.getElementById('viscosity');
-  var active=document.getElementById('active'),activeText=document.getElementById('active-text');
-  var flavours={
-    rose:{light:'#fff4e8',mid:'#f3b4b5',body:'#e9a0aa',edge:'#cb7a91',dark:'#9d526c',glow:'rgba(255,251,237,.90)'},
-    taro:{light:'#fbf3ff',mid:'#d7c1f3',body:'#baa4e2',edge:'#9179c8',dark:'#6d589a',glow:'rgba(255,251,255,.93)'},
-    matcha:{light:'#f6fbe7',mid:'#d2e8c0',body:'#b0d3ad',edge:'#83b69c',dark:'#548a77',glow:'rgba(255,255,238,.92)'}
-  };
-  var palette=flavours.rose;
-  var TAU=Math.PI*2,SECTORS=44,RINGS=4;
-  var particles=[],links=[],touches=new Map();
-  var w=0,h=0,r=0,cx=0,cy=0,dpr=1,baseArea=0,hasMoved=false;
-  var tick=0,last=0,accumulator=0;
-  function clamp(n,a,b){return Math.min(b,Math.max(a,n));}
-  function vid(ring,segment){return 1+(ring-1)*SECTORS+(segment+SECTORS)%SECTORS;}
-  function edge(a,b,k){
-    var p=particles[a],q=particles[b],dx=q.x-p.x,dy=q.y-p.y;
-    links.push({a:a,b:b,d:Math.hypot(dx,dy),k:k});
-  }
-  function build(){
-    particles=[];links=[];touches.clear();hasMoved=false;
-    cx=w*.5;cy=h*(h<620?.49:(w<650?.49:.53));
-    r=Math.min(w*(w<650?.343:.245),h*(w<650?.205:.275),268);
-    r=Math.max(74,r);
-    particles.push({x:cx,y:cy,px:cx,py:cy,ox:cx,oy:cy});
-    var rs=[.24,.48,.74,1];
-    for(var ring=1;ring<=RINGS;ring++){
-      for(var i=0;i<SECTORS;i++){
-        var theta=i*TAU/SECTORS,rr=r*rs[ring-1];
-        var x=cx+Math.cos(theta)*rr,y=cy+Math.sin(theta)*rr;
-        particles.push({x:x,y:y,px:x,py:y,ox:x,oy:y});
-      }
-    }
-    for(var j=0;j<SECTORS;j++){
-      edge(0,vid(1,j),.78);
-      for(var k=1;k<=RINGS;k++){
-        edge(vid(k,j),vid(k,j+1),.91);
-        edge(vid(k,j),vid(k,j+2),.20);
-        if(k>1){
-          edge(vid(k-1,j),vid(k,j),.84);
-          edge(vid(k-1,j),vid(k,j+1),.42);
-          edge(vid(k-1,j+1),vid(k,j),.42);
-        }
-      }
-    }
-    baseArea=polygonArea();
-    updateActive();
-  }
-  function polygonArea(){
-    var a=0;
-    for(var i=0;i<SECTORS;i++){
-      var p=particles[vid(RINGS,i)],q=particles[vid(RINGS,i+1)];
-      a+=p.x*q.y-q.x*p.y;
-    }
-    return Math.abs(a*.5);
-  }
-  function resize(){
-    w=window.innerWidth;h=window.innerHeight;
-    dpr=Math.min(window.devicePixelRatio||1,2);
-    canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
-    canvas.style.width=w+'px';canvas.style.height=h+'px';
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-    build();
-  }
-  function updateActive(){
-    var n=touches.size;active.classList.toggle('engaged',n>0);
-    activeText.textContent=n?String(n).padStart(2,'0')+' POINT'+(n===1?'':'S')+' ACTIVE':'READY TO SQUISH';
-    canvas.classList.toggle('grabbing',n>0);
-  }
-  function polygonPath(){
-    var boundary=[];
-    for(var i=0;i<SECTORS;i++)boundary.push(particles[vid(RINGS,i)]);
-    ctx.beginPath();
-    var first=boundary[0];ctx.moveTo(first.x,first.y);
-    for(var j=0;j<SECTORS;j++){
-      var p0=boundary[(j-1+SECTORS)%SECTORS],p1=boundary[j];
-      var p2=boundary[(j+1)%SECTORS],p3=boundary[(j+2)%SECTORS];
-      ctx.bezierCurveTo(p1.x+(p2.x-p0.x)/6,p1.y+(p2.y-p0.y)/6,
-        p2.x-(p3.x-p1.x)/6,p2.y-(p3.y-p1.y)/6,p2.x,p2.y);
-    }
-    ctx.closePath();
-  }
-  function isInside(x,y){
-    polygonPath();
-    return ctx.isPointInPath(x,y);
-  }
-  function nearestIndex(x,y){
-    var best=-1,bestD=Infinity,used=new Set();
-    touches.forEach(function(t){used.add(t.index);});
-    for(var i=0;i<particles.length;i++){
-      if(used.has(i))continue;
-      var p=particles[i],d=(p.x-x)*(p.x-x)+(p.y-y)*(p.y-y);
-      if(d<bestD){bestD=d;best=i;}
-    }
-    return best;
-  }
-  function localPosition(e){var b=canvas.getBoundingClientRect();return{x:e.clientX-b.left,y:e.clientY-b.top};}
-  function down(e){
-    if(e.pointerType==='mouse'&&e.button!==0)return;
-    var p=localPosition(e);
-    if(!isInside(p.x,p.y)){
-      // Permit gripping the very edge without making the whole background draggable.
-      var nearest=Infinity;
-      for(var k=0;k<SECTORS;k++){
-        var b=particles[vid(RINGS,k)];
-        nearest=Math.min(nearest,Math.hypot(b.x-p.x,b.y-p.y));
-      }
-      if(nearest>26)return;
-    }
-    e.preventDefault();
-    try{canvas.setPointerCapture(e.pointerId);}catch(err){}
-    var index=nearestIndex(p.x,p.y);
-    if(index<0)return;
-    var v=particles[index];
-    var t={index:index,x:p.x,y:p.y,oldX:p.x,oldY:p.y,
-      offsetX:p.x-v.x,offsetY:p.y-v.y,speedX:0,speedY:0,
-      depth:0,pressure:e.pressure||.5};
-    touches.set(e.pointerId,t);
-    // A gentle poke propagates a wobble through the mesh.
-    for(var i=0;i<particles.length;i++){
-      var q=particles[i],dx=q.x-p.x,dy=q.y-p.y,d=Math.hypot(dx,dy);
-      if(d<r*.75&&d>1){
-        var impulse=(1-d/(r*.75))*1.4;
-        q.px-=dx/d*impulse;q.py-=dy/d*impulse;
-      }
-    }
-    updateActive();
-  }
-  function move(e){
-    var t=touches.get(e.pointerId);if(!t)return;
-    e.preventDefault();
-    var p=localPosition(e);
-    t.speedX=clamp(p.x-t.x,-43,43);t.speedY=clamp(p.y-t.y,-43,43);
-    t.oldX=t.x;t.oldY=t.y;t.x=p.x;t.y=p.y;
-    t.pressure=e.pressure||.5;
-    if(Math.abs(t.speedX)+Math.abs(t.speedY)>1)hasMoved=true;
-  }
-  function up(e){
-    var t=touches.get(e.pointerId);if(!t)return;
-    var q=particles[t.index];
-    q.px=q.x-t.speedX*.65;q.py=q.y-t.speedY*.65;
-    touches.delete(e.pointerId);updateActive();
-    try{canvas.releasePointerCapture(e.pointerId);}catch(err){}
-  }
-  canvas.addEventListener('pointerdown',down,{passive:false});
-  canvas.addEventListener('pointermove',move,{passive:false});
-  canvas.addEventListener('pointerup',up);
-  canvas.addEventListener('pointercancel',up);
-  canvas.addEventListener('lostpointercapture',up);
-  canvas.addEventListener('contextmenu',function(e){e.preventDefault();});
-  document.getElementById('reset').addEventListener('click',build);
-  springInput.addEventListener('input',function(){document.getElementById('spring-value').textContent=String(this.value).padStart(2,'0');});
-  viscInput.addEventListener('input',function(){document.getElementById('viscosity-value').textContent=String(this.value).padStart(2,'0');});
-  document.querySelectorAll('[data-flavour]').forEach(function(b){
-    b.addEventListener('click',function(){
-      palette=flavours[b.dataset.flavour];
-      document.querySelectorAll('[data-flavour]').forEach(function(o){o.setAttribute('aria-pressed',String(o===b));});
-    });
-  });
-  function simulate(){
-    tick++;
-    var damping=1-(Number(viscInput.value)*.013+0.016);
-    var stiffness=.44+Number(springInput.value)*.048;
-    var pinned=new Map();
-    touches.forEach(function(t){
-      t.depth=Math.min(1,t.depth+.07);
-      pinned.set(t.index,t);
-    });
-    for(var i=0;i<particles.length;i++){
-      var p=particles[i],dx=(p.x-p.px)*damping,dy=(p.y-p.py)*damping;
-      p.px=p.x;p.py=p.y;
-      if(pinned.has(i))continue;
-      p.x+=dx+(p.ox-p.x)*.00055;
-      p.y+=dy+(p.oy-p.y)*.00055;
-      if(!reduceMotion&&touches.size===0&&i>1){
-        p.y+=Math.sin(tick*.018+i*.11)*.008;
-      }
-    }
-    // Small displacement around pressed points produces a pillowy squash.
-    touches.forEach(function(t){
-      var reach=r*.39;
-      for(var i=1;i<particles.length;i++){
-        if(pinned.has(i))continue;
-        var p=particles[i],dx=p.x-t.x,dy=p.y-t.y,d=Math.hypot(dx,dy);
-        if(d>2&&d<reach){
-          var force=Math.pow(1-d/reach,2)*t.depth*.8;
-          p.x+=dx/d*force;p.y+=dy/d*force;
-        }
-      }
-    });
-    for(var iteration=0;iteration<6;iteration++){
-      pinned.forEach(function(t,index){
-        var p=particles[index];p.x=t.x-t.offsetX;p.y=t.y-t.offsetY;
-      });
-      for(var c=0;c<links.length;c++){
-        var l=links[c],a=particles[l.a],b=particles[l.b];
-        var dx=b.x-a.x,dy=b.y-a.y,dist=Math.hypot(dx,dy);
-        if(dist<.001)continue;
-        var wa=pinned.has(l.a)?0:1,wb=pinned.has(l.b)?0:1,weight=wa+wb;
-        if(!weight)continue;
-        var corr=(dist-l.d)/dist*l.k*stiffness;
-        a.x+=dx*corr*(wa/weight);a.y+=dy*corr*(wa/weight);
-        b.x-=dx*corr*(wb/weight);b.y-=dy*corr*(wb/weight);
-      }
-      // Approximate incompressibility: pulling it wider makes it thinner.
-      var area=polygonArea(),diff=clamp(baseArea/(area||1)-1,-.75,1.0);
-      var puff=diff*.011;
-      var mx=0,my=0;
-      for(var j=0;j<SECTORS;j++){var o=particles[vid(RINGS,j)];mx+=o.x;my+=o.y;}
-      mx/=SECTORS;my/=SECTORS;
-      for(var j=0;j<SECTORS;j++){
-        var index=vid(RINGS,j),o=particles[index];
-        if(pinned.has(index))continue;
-        o.x+=(o.x-mx)*puff;o.y+=(o.y-my)*puff;
-      }
-    }
-    pinned.forEach(function(t,index){
-      var p=particles[index];p.x=t.x-t.offsetX;p.y=t.y-t.offsetY;
-      p.px=p.x-t.speedX*.13;p.py=p.y-t.speedY*.13;
-      t.speedX*=.52;t.speedY*=.52;
-    });
-  }
-  function texturePoint(angle,radial){
-    var f=((angle%TAU)+TAU)%TAU/TAU*SECTORS;
-    var i=Math.floor(f),a=f-i;
-    var ring=clamp(Math.ceil(radial*RINGS),1,RINGS);
-    var low=ring===1?0:ring-1;
-    var q=clamp(radial*RINGS-(ring-1),0,1);
-    function sample(k){
-      var v0=k===0?particles[0]:particles[vid(k,i)];
-      var v1=k===0?particles[0]:particles[vid(k,i+1)];
-      return{x:v0.x+(v1.x-v0.x)*a,y:v0.y+(v1.y-v0.y)*a};
-    }
-    var p0=sample(low),p1=sample(ring);
-    return{x:p0.x+(p1.x-p0.x)*q,y:p0.y+(p1.y-p0.y)*q};
-  }
-  function draw(){
-    ctx.clearRect(0,0,w,h);
-    var minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity,midX=0,midY=0;
-    for(var i=0;i<SECTORS;i++){
-      var b=particles[vid(RINGS,i)];
-      minX=Math.min(minX,b.x);maxX=Math.max(maxX,b.x);
-      minY=Math.min(minY,b.y);maxY=Math.max(maxY,b.y);
-      midX+=b.x;midY+=b.y;
-    }
-    midX/=SECTORS;midY/=SECTORS;
-    var spanX=Math.max(20,maxX-minX),spanY=Math.max(20,maxY-minY);
-    var rr=Math.max(spanX,spanY)*.52;
-    // Atmospheric contact shadow, always behind the jelly.
-    ctx.save();
-    var floorY=clamp(maxY+17,cy+r*.88,h*.80);
-    ctx.translate(midX,floorY);
-    ctx.scale(Math.max(30,spanX*.58),Math.max(14,r*.18));
-    var shadow=ctx.createRadialGradient(0,0,.04,0,0,1);
-    shadow.addColorStop(0,'rgba(135,86,91,.20)');
-    shadow.addColorStop(.55,'rgba(135,86,91,.10)');
-    shadow.addColorStop(1,'rgba(135,86,91,0)');
-    ctx.fillStyle=shadow;ctx.beginPath();ctx.arc(0,0,1,0,TAU);ctx.fill();ctx.restore();
-    ctx.save();
-    polygonPath();
-    ctx.shadowColor='rgba(141,75,96,.26)';ctx.shadowBlur=Math.min(48,r*.23);
-    ctx.shadowOffsetY=13;
-    var fill=ctx.createRadialGradient(midX-spanX*.24,minY+spanY*.18,spanX*.03,midX+spanX*.12,midY+spanY*.14,rr*1.4);
-    fill.addColorStop(0,palette.light);fill.addColorStop(.34,palette.mid);
-    fill.addColorStop(.69,palette.body);fill.addColorStop(1,palette.edge);
-    ctx.fillStyle=fill;ctx.fill();
-    ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
-    ctx.clip();
-    // Inner light diffusion and translucent lower rim.
-    var gloss=ctx.createRadialGradient(midX-spanX*.23,minY+spanY*.18,0,midX-spanX*.12,midY,spanX*.83);
-    gloss.addColorStop(0,'rgba(255,255,255,.63)');gloss.addColorStop(.34,'rgba(255,255,255,.11)');gloss.addColorStop(1,'rgba(255,255,255,0)');
-    ctx.fillStyle=gloss;ctx.fillRect(minX-50,minY-50,spanX+100,spanY+100);
-    var bottom=ctx.createLinearGradient(0,midY,0,maxY);
-    bottom.addColorStop(0,'rgba(112,59,78,0)');
-    bottom.addColorStop(1,'rgba(100,51,76,.13)');
-    ctx.fillStyle=bottom;ctx.fillRect(minX-25,midY,spanX+50,spanY);
-    // Stretchable satin-like broad reflection.
-    var gl=texturePoint(4.04,.56),gl2=texturePoint(5.2,.65);
-    var sheen=ctx.createRadialGradient(gl.x,gl.y,2,gl.x,gl.y,Math.max(30,r*.47));
-    sheen.addColorStop(0,palette.glow);sheen.addColorStop(.4,'rgba(255,255,255,.25)');
-    sheen.addColorStop(1,'rgba(255,255,255,0)');
-    ctx.save();ctx.translate(gl.x,gl.y);ctx.rotate(-.52);ctx.scale(1.45,.72);
-    ctx.fillStyle=sheen;ctx.beginPath();ctx.arc(0,0,Math.max(35,r*.47),0,TAU);ctx.fill();ctx.restore();
-    // Surface pores follow the soft-body mesh (no static texture sliding).
-    for(var i=0;i<100;i++){
-      var angle=i*2.399963229728653,radial=.11+.77*Math.sqrt(((i*37)%101)/101);
-      var tp=texturePoint(angle,radial);
-      ctx.beginPath();ctx.arc(tp.x,tp.y,i%7===0?1.2:.55,0,TAU);
-      ctx.fillStyle=i%3===0?'rgba(255,255,255,.25)':'rgba(139,75,91,.085)';
-      ctx.fill();
-    }
-    // A subtle compression dimple appears under each fingertip.
-    touches.forEach(function(t){
-      var depth=t.depth||.2,rad=Math.max(27,r*.23);
-      var contact=ctx.createRadialGradient(t.x,t.y,1,t.x,t.y,rad);
-      contact.addColorStop(0,'rgba(117,55,72,'+(.13*depth)+')');
-      contact.addColorStop(.36,'rgba(144,76,88,'+(.085*depth)+')');
-      contact.addColorStop(.77,'rgba(255,255,255,'+(.11*depth)+')');
-      contact.addColorStop(1,'rgba(255,255,255,0)');
-      ctx.fillStyle=contact;ctx.beginPath();ctx.arc(t.x,t.y,rad,0,TAU);ctx.fill();
-    });
-    ctx.restore();
-    // Soft edge highlights add apparent thickness.
-    polygonPath();ctx.lineWidth=Math.max(2.1,r*.018);
-    ctx.strokeStyle='rgba(255,255,255,.47)';ctx.stroke();
-    polygonPath();ctx.lineWidth=1.1;ctx.strokeStyle='rgba(124,69,86,.16)';ctx.stroke();
-    // The small glossy flick moves with the material.
-    ctx.save();
-    var dot=texturePoint(3.93,.55);
-    ctx.translate(dot.x,dot.y);ctx.rotate(-.49);
-    ctx.fillStyle='rgba(255,255,255,.61)';ctx.beginPath();
-    ctx.ellipse(0,0,Math.max(8,r*.09),Math.max(3,r*.026),0,0,TAU);ctx.fill();
-    ctx.restore();
-  }
-  function frame(now){
-    if(!last)last=now;
-    accumulator+=Math.min(48,now-last);last=now;
-    var n=0;
-    while(accumulator>=16.6667&&n++<3){simulate();accumulator-=16.6667;}
-    draw();requestAnimationFrame(frame);
-  }
-  window.addEventListener('resize',resize,{passive:true});
-  document.addEventListener('visibilitychange',function(){last=performance.now();accumulator=0;});
-  resize();requestAnimationFrame(frame);
-})();
-</script>
+<script src="mochi-3d.js" defer></script>
 </body>
 </html>
