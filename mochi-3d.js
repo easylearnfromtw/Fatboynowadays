@@ -349,7 +349,7 @@
       fractureCharge+=((strain-1)*.68+.075)*frame;
     }else fractureCharge=Math.max(0,fractureCharge-.15*frame);
     // A small yield interval reveals the neck thinning before fracture.
-    if(fractureCharge<.42)return;
+    if(fractureCharge<.90)return;
     const force=clamp((strain-1)*.83+speed*.32+fractureCharge*.38,0,1);
     // Larger, faster pulls yield a more asymmetric fracture even when both hands pull evenly.
     const forceBias=(asymmetry>=0?1:-1)*(.025+force*.20);
@@ -674,8 +674,8 @@
     const color=getComputedStyle(document.documentElement).getPropertyValue('--chosen-color').trim()||'#EFB0BB';
     fxctx.save();
     // Elastic rice-fiber filaments become visible only when necking heavily.
-    if(!tear&&profiles[material].tear&&neckTension>.57){
-      const t=clamp((neckTension-.57)/.55,0,1);
+    if(!tear&&profiles[material].tear&&neckTension>.37){
+      const t=clamp((neckTension-.37)/.65,0,1);
       const ax=neckAxisX,ay=neckAxisY,cx=neckCenterX,cy=neckCenterY;
       for(let i=0;i<7;i++){
         const offset=(i-3)*.030;
