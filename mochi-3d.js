@@ -140,23 +140,88 @@
   gl.enable(gl.DEPTH_TEST);
   gl.depthFunc(gl.LEQUAL);
   gl.disable(gl.CULL_FACE);
-  const palettes={
-    rose:{light:'#fff7ed',base:'#efb0bb',shade:'#b96181'},
-    taro:{light:'#fdf6ff',base:'#c7b3ec',shade:'#836ab8'},
-    matcha:{light:'#faffef',base:'#b9d9b7',shade:'#669b83'}
-  };
-  function rgb(s){
-    return [parseInt(s.slice(1,3),16)/255,parseInt(s.slice(3,5),16)/255,parseInt(s.slice(5,7),16)/255];
+  // Physical fan-deck-inspired numbered swatches; ML numbers are original.
+  const paletteData=[
+    ['ML-101','Blush Veil','薄霧玫瑰','#EFB0BB','pink'],
+    ['ML-102','Peach Cloud','蜜桃雲','#F6B69B','pink'],
+    ['ML-103','Coral Silk','珊瑚絲緞','#F18F8B','pink'],
+    ['ML-104','Berry Sorbet','莓果雪酪','#D97AA6','pink'],
+    ['ML-201','Taro Milk','芋泥牛奶','#C7B3EC','violet'],
+    ['ML-202','Lilac Mist','丁香薄霧','#AEADE7','violet'],
+    ['ML-203','Lavender Dust','薰衣草灰','#B99ACB','violet'],
+    ['ML-204','Orchid Haze','蘭花暮色','#9982C3','violet'],
+    ['ML-301','Matcha Milk','抹茶歐蕾','#B9D9B7','green'],
+    ['ML-302','Sage Powder','鼠尾草粉','#A3C0A8','green'],
+    ['ML-303','Mint Foam','薄荷泡沫','#96D5C9','green'],
+    ['ML-304','Olive Tea','橄欖茶','#ADB98C','green'],
+    ['ML-401','Vanilla Cream','香草奶油','#F0D9BB','neutral'],
+    ['ML-402','Oat Silk','燕麥絲絨','#CBB9AB','neutral'],
+    ['ML-403','Rice Paper','米白和紙','#E9DED2','neutral'],
+    ['ML-404','Cocoa Cloud','可可雲','#BCA29A','neutral'],
+    ['ML-501','Blue Haze','霧海藍','#A6CDE4','blue'],
+    ['ML-502','Porcelain','青瓷藍','#BACDDE','blue'],
+    ['ML-503','Sea Glass','海玻璃','#86C2CB','blue'],
+    ['ML-504','Misty Sky','淡空藍','#C5DDEA','blue']
+  ];
+  function rgb(s){return [1,3,5].map(i=>parseInt(s.slice(i,i+2),16)/255);}
+  function mixRgb(a,b,t){const A=rgb(a),B=rgb(b);return A.map((v,i)=>v*(1-t)+B[i]*t);}
+  let chosenCode='ML-101';
+  const library=document.getElementById('palette-library');
+  const paletteTrigger=document.getElementById('palette-trigger');
+  const paletteGrid=document.getElementById('palette-grid');
+  const paletteSelected=document.getElementById('selected-code');
+  const paletteSelectedName=document.getElementById('selected-name');
+  const paletteCurrent=document.getElementById('palette-current');
+  let family='all';
+  function setPalette(code){
+    const c=paletteData.find(p=>p[0]===code)||paletteData[0];
+    chosenCode=c[0];
+    gl.uniform3fv(uni.light,mixRgb(c[3],'#FFFFFF',.64));
+    gl.uniform3fv(uni.base,rgb(c[3]));
+    gl.uniform3fv(uni.shade,mixRgb(c[3],'#40303F',.43));
+    paletteSelected.textContent=c[0];
+    paletteSelectedName.textContent=c[1]+' / '+c[2];
+    paletteCurrent.style.background=c[3];
+    document.documentElement.style.setProperty('--chosen-color',c[3]);
+    document.querySelectorAll('.palette-chip').forEach(btn=>{
+      btn.setAttribute('aria-pressed',String(btn.dataset.code===c[0]));
+    });
   }
-  function setPalette(name){
-    const c=palettes[name]||palettes.rose;
-    gl.uniform3fv(uni.light,rgb(c.light));
-    gl.uniform3fv(uni.base,rgb(c.base));
-    gl.uniform3fv(uni.shade,rgb(c.shade));
-    document.querySelectorAll('[data-flavour]').forEach(btn=>btn.setAttribute('aria-pressed',String(btn.dataset.flavour===name)));
+  function renderPalette(){
+    paletteGrid.replaceChildren();
+    for(const c of paletteData){
+      if(family!=='all'&&c[4]!==family)continue;
+      const b=document.createElement('button');
+      b.type='button';b.className='palette-chip';b.dataset.code=c[0];
+      b.setAttribute('aria-pressed',String(c[0]===chosenCode));
+      b.setAttribute('aria-label',c[0]+' '+c[2]+' '+c[3]);
+      const face=document.createElement('span');face.className='chip-face';face.style.background=c[3];
+      const detail=document.createElement('span');detail.className='chip-detail';
+      const number=document.createElement('strong');number.textContent=c[0];
+      const name=document.createElement('small');name.textContent=c[1];
+      detail.append(number,name);b.append(face,detail);
+      b.addEventListener('click',()=>setPalette(c[0]));
+      paletteGrid.append(b);
+    }
   }
-  document.querySelectorAll('[data-flavour]').forEach(btn=>btn.addEventListener('click',()=>setPalette(btn.dataset.flavour)));
-  setPalette('rose');
+  document.querySelectorAll('[data-family]').forEach(b=>b.addEventListener('click',()=>{
+    family=b.dataset.family;
+    document.querySelectorAll('[data-family]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+    renderPalette();
+  }));
+  function showLibrary(open){
+    library.classList.toggle('is-open',open);
+    library.setAttribute('aria-hidden',String(!open));
+    paletteTrigger.setAttribute('aria-expanded',String(open));
+    if(open)library.querySelector('.palette-close').focus();
+    else paletteTrigger.focus();
+  }
+  paletteTrigger.addEventListener('click',()=>showLibrary(!library.classList.contains('is-open')));
+  library.querySelector('.palette-close').addEventListener('click',()=>showLibrary(false));
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'&&library.classList.contains('is-open'))showLibrary(false);
+  });
+  renderPalette();setPalette(chosenCode);
   const contacts=new Map(),deformations=[],pressUniform=new Float32Array(8*4);
   let viewW=0,viewH=0,centerX=0,centerY=0,scale=1,dpr=1,time=0,lastTime=0;
   function resize(){
