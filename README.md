@@ -1,30 +1,29 @@
-# MOCHI LAB — A Little Softer
+# MOCHI LAB — 3D Soft Touch
 
-A playful, mobile-first digital mochi you can **stretch, press, squish and release**. Multiple fingers can grip the same soft body simultaneously, with spring-based deformation and a soft rebound after release.
+**Interactive WebGL 3D mochi** with surface dents, fingertip contact shadows, studio highlights and multi-touch deformation. Replaces the earlier 2D rendering on the same GitHub Pages site.
 
-## Live site
+## Open
 
 https://easylearnfromtw.github.io/Fatboynowadays/
 
-GitHub Pages must be enabled for the repository's main branch, root directory. Pages deployment status is managed by GitHub.
+## Gestures
 
-## Interactions
-
-- Drag one finger (or a mouse) to deform the mochi.
-- Use two or more fingers to pull the material apart, squeeze it together or twist its shape.
-- Long-press to create a soft dimple; release for momentum and wobble.
-- Change **elasticity** and **viscosity** using the sliders.
-- Pick between **peach, taro and matcha** palettes.
-- Tap **重新揉捏** to reset the material.
+- **Single finger: press and hold.** A true geometric depression forms under the fingertip, with local cavity shadow and a raised reflective rim.
+- **Single finger: drag.** Move the held patch to pull the 3D surface.
+- **Two or more fingers:** stretch, pinch and twist simultaneously.
+- **Release:** spring-damped soft return, with inertia influenced by elasticity and viscosity sliders.
+- **Flavours:** peach, taro and matcha lighting palettes.
+- **Reset:** restores the original 3D shape.
 
 ## Implementation
 
-This is a standalone `index.html` — no dependencies, bundler, installation or backend.
+- `index.html`: responsive interface, controls and a soft blurred floor-contact shadow.
+- `mochi-3d.js`: dependency-free WebGL 3D surface renderer. A closed UV-sphere-like ellipsoid uses **3D mesh vertex displacement**, per-frame surface-normal recomputation, a cavity ambient-occlusion shader and studio-style diffuse/specular lighting.
+- Uses Pointer Events and pointer capture for multi-finger touch, mouse and pen input.
+- Rendering uses raw WebGL 1.0. Modern iOS Safari, Android Chrome and desktop browsers with WebGL enabled can run it without a bundler. A static 2D illustration is shown if WebGL is unavailable.
 
-The physics model uses a concentric particle mesh with radial, ring and diagonal distance constraints, pinned pointer contacts, a lightweight area-preservation pass and momentum damping. Drawing uses Canvas 2D gradient shading, dynamic outlines, tracked surface highlights and touch dimples. Pointer Events support simultaneous touches, mouse drag and pen input.
+The simulation is an interactive approximation of a soft viscoelastic object, not a calibrated finite-element physics model.
 
-Open `index.html` locally in a modern browser to try it.
+## Version history
 
-## Earlier project
-
-The previous scroll-driven visual history site 《千年之重》 was replaced in the main branch in November 2026 at the owner's request. Its original `index.html`, illustrations and history remain available in Git commit history; the existing asset folders were not deleted.
+The original historical shadow-puppet storytelling site 《千年之重》 and the earlier Canvas 2D mochi implementation are preserved in Git history. Artwork assets from earlier work were not deleted.
