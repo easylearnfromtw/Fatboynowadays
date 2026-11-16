@@ -6,7 +6,7 @@
   const viscosity=document.getElementById('viscosity');
   const status=document.getElementById('active');
   const statusText=document.getElementById('active-text');
-  const gl=canvas.getContext('webgl',{alpha:true,antialias:true,depth:true,premultipliedAlpha:true,preserveDrawingBuffer:false});
+  const gl=canvas.getContext('webgl',{alpha:true,antialias:true,depth:true,premultipliedAlpha:true,preserveDrawingBuffer:true});
   if(!gl){
     const c=canvas.getContext('2d');
     function unsupported(){
@@ -44,6 +44,9 @@
     uniform vec3 uBaseColor;
     uniform vec3 uShadeColor;
     uniform vec4 uPress[8];
+    uniform float uMaterial;
+    uniform float uClock;
+    uniform vec3 uPopped[20];
     void main() {
       vec3 n=normalize(vNormal);
       vec3 view=vec3(0.0,0.0,1.0);
@@ -78,6 +81,43 @@
       float rim=pow(1.0-facing,2.6);
       color+=uLightColor*rim*0.19;
       color=mix(color,uShadeColor,rim*0.12);
+      // Material-specific procedural surface response: all shading remains 3D.
+      float grain=fract(sin(dot(floor(vPosition.xy*116.0),vec2(12.9898,78.233)))*43758.5453);
+      if(uMaterial>0.5&&uMaterial<1.5){
+        // Crunchy slime: colorful trapped bead inclusions, clear sticky gloss.
+        vec2 tile=fract(vPosition.xy*13.0)-.5;
+        float pearl=1.0-smoothstep(.075,.15,length(tile));
+        float spot=fract(sin(dot(floor(vPosition.xy*13.0),vec2(73.31,48.29)))*15327.48);
+        color=mix(color,mix(vec3(.93,1.0,.92),vec3(1.0,.80,.91),spot),pearl*.28*facing);
+        color+=grain*.027;
+      }else if(uMaterial>1.5&&uMaterial<2.5){
+        // Paper clay: low-specular rough matte surface with fibrous grain.
+        color=mix(color,uBaseColor,.36);
+        color*=.94+grain*.11;
+        color-=vec3(glint*.31+sideSpec*.28);
+      }else if(uMaterial>2.5&&uMaterial<3.5){
+        // Soap film: pearlescent interference colour around the Fresnel edge.
+        float iridescence=sin(vPosition.y*8.0+n.x*3.5+uClock*.45);
+        vec3 rainbow=mix(vec3(.77,.91,1.0),vec3(1.0,.77,.96),.5+.5*iridescence);
+        color=mix(color,rainbow,.24+rim*.58);
+        color=mix(color,vec3(1.0),pow(1.0-facing,3.0)*.35);
+        color+=vec3(glint*.3);
+      }else if(uMaterial>3.5){
+        // Regular, individually poppable blisters of transparent bubble wrap.
+        vec2 cell=floor(vPosition.xy*8.0+.5);
+        vec2 local=fract(vPosition.xy*8.0+.5)-.5;
+        float rr=length(local);
+        float popped=0.0;
+        for(int p=0;p<20;p++){
+          float valid=uPopped[p].z;
+          popped=max(popped,valid*(1.0-step(.24,length(cell-uPopped[p].xy))));
+        }
+        float blister=(1.0-smoothstep(.25,.43,rr))*(1.0-popped);
+        float ring=smoothstep(.19,.30,rr)*(1.0-smoothstep(.33,.42,rr));
+        color+=vec3(.10,.16,.21)*blister+vec3(.06,.08,.11)*ring;
+        color*=1.0-(1.0-blister)*popped*.15;
+        color+=vec3(.045)*grain;
+      }
       gl_FragColor=vec4(clamp(color,0.0,1.0),1.0);
     }`;
   function makeShader(type,source){
@@ -98,7 +138,10 @@
     light:gl.getUniformLocation(program,'uLightColor'),
     base:gl.getUniformLocation(program,'uBaseColor'),
     shade:gl.getUniformLocation(program,'uShadeColor'),
-    press:gl.getUniformLocation(program,'uPress[0]')
+    press:gl.getUniformLocation(program,'uPress[0]'),
+    material:gl.getUniformLocation(program,'uMaterial'),
+    clock:gl.getUniformLocation(program,'uClock'),
+    popped:gl.getUniformLocation(program,'uPopped[0]')
   };
   const LAT=48,LON=80,ROW=LON+1,COUNT=(LAT+1)*ROW;
   const original=new Float32Array(COUNT*3);
@@ -107,6 +150,32 @@
   const indices=[],TAU=Math.PI*2;
   const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
   const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const profiles={
+    mochi:{limit:1,press:1,spring:1,viscosity:1,tear:true,pop:false,matte:false},
+    crunch:{limit:.86,press:.78,spring:1.28,viscosity:.65,tear:true,pop:false,matte:false},
+    clay:{limit:.49,press:.60,spring:.34,viscosity:1.6,tear:true,pop:false,matte:true},
+    bubble:{limit:.42,press:1.22,spring:1.7,viscosity:.30,tear:false,pop:true,matte:false},
+    wrap:{limit:1.9,press:.68,spring:.86,viscosity:.85,tear:false,pop:true,matte:false}
+  };
+  const materialIds={mochi:0,crunch:1,clay:2,bubble:3,wrap:4};
+  let material='mochi';
+  const imprints=[],poppedCells=[];
+  const poppedUniform=new Float32Array(20*3);
+  let bubbleBurst=0,shimmer=0;
+  const feedback=(kind,amount=1)=>window.MochiFeedback?.(kind,amount);
+  function materialChanged(name){
+    if(!profiles[name])return;
+    material=name;
+    const defaults={mochi:[7,6],crunch:[6,4],clay:[3,9],bubble:[9,2],wrap:[5,5]};
+    elasticity.value=defaults[name][0];viscosity.value=defaults[name][1];
+    document.getElementById('spring-value').textContent=String(elasticity.value).padStart(2,'0');
+    document.getElementById('viscosity-value').textContent=String(viscosity.value).padStart(2,'0');
+    imprints.length=0;poppedCells.length=0;bubbleBurst=0;shimmer=0;
+    contacts.clear();deformations.length=0;tear=null;rejoinPulse=0;
+    tearHint.textContent=name==='bubble'?'PRESS TO POP · 輕碰泡泡':name==='wrap'?'POP THE CELLS · 逐顆戳破':name==='clay'?'PRESS TO SCULPT · 壓痕會保留':'STRETCH TO TEAR · 拉到極限會斷裂';
+    tearHint.classList.remove('torn');updateStatus();
+    gl.uniform1f(uni.material,materialIds[name]);
+  }
   for(let j=0;j<=LAT;j++){
     const polar=Math.PI*j/LAT,sinP=Math.sin(polar),cosP=Math.cos(polar);
     for(let i=0;i<=LON;i++){
@@ -334,7 +403,7 @@
     shadow.style.top=(centerY+radius*.74)+'px';
     shadow.style.width=(radius*1.86)+'px';
     shadow.style.height=(radius*.43)+'px';
-    contacts.clear();deformations.length=0;tear=null;rejoinPulse=0;updateStatus();
+    contacts.clear();deformations.length=0;tear=null;rejoinPulse=0;imprints.length=0;poppedCells.length=0;bubbleBurst=0;updateStatus();
   }
   function world(e){
     const rect=canvas.getBoundingClientRect();
@@ -512,6 +581,14 @@
       pressUniform[n*4+3]=piece?.22:.285;n++;
     }
     gl.uniform4fv(uni.press,pressUniform);
+    poppedUniform.fill(0);
+    for(let i=0;i<Math.min(20,poppedCells.length);i++){
+      poppedUniform[i*3]=poppedCells[i].ix;
+      poppedUniform[i*3+1]=poppedCells[i].iy;
+      poppedUniform[i*3+2]=1;
+    }
+    gl.uniform3fv(uni.popped,poppedUniform);
+    gl.uniform1f(uni.clock,time*.001);
     gl.bindBuffer(gl.ARRAY_BUFFER,posBuffer);
     gl.bufferSubData(gl.ARRAY_BUFFER,0,positions);
     gl.bindBuffer(gl.ARRAY_BUFFER,normalBuffer);
@@ -541,5 +618,6 @@
   }
   window.addEventListener('resize',resize,{passive:true});
   document.addEventListener('visibilitychange',()=>{lastTime=0;});
-  resize();deform();requestAnimationFrame(render);
+  resize();gl.uniform1f(uni.material,0);deform();requestAnimationFrame(render);
+  window.MochiAPI={setMaterial:materialChanged,getMaterial:()=>material,reset:()=>document.getElementById('reset').click()};
 })();
