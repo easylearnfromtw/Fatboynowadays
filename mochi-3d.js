@@ -298,6 +298,13 @@
   let tear=null;
   let rejoinPulse=0;
   const tearHint=document.getElementById('tear-hint');
+  const fxCanvas=document.getElementById('fx-layer');
+  const fxctx=fxCanvas.getContext('2d',{alpha:true});
+  const popFx=[];
+  function addPopFX(x,y,strength=1){
+    popFx.push({x,y,age:0,strength});
+    if(popFx.length>25)popFx.shift();
+  }
   let neckTension=0,neckAxisX=1,neckAxisY=0,neckCenterX=0,neckCenterY=0;
   let fractureCharge=0,snapEnergy=0,breakTime=0;
   function splitGesture(frame){
@@ -429,6 +436,9 @@
     dpr=Math.min(window.devicePixelRatio||1,2);
     canvas.width=Math.floor(viewW*dpr);canvas.height=Math.floor(viewH*dpr);
     canvas.style.width=viewW+'px';canvas.style.height=viewH+'px';
+    fxCanvas.width=Math.floor(viewW*dpr);fxCanvas.height=Math.floor(viewH*dpr);
+    fxCanvas.style.width=viewW+'px';fxCanvas.style.height=viewH+'px';
+    fxctx.setTransform(dpr,0,0,dpr,0,0);
     gl.viewport(0,0,canvas.width,canvas.height);
     const radius=Math.min(viewW*(viewW<650?.355:.26),viewH*(viewW<650?.24:.29),286);
     scale=radius/1.08;
@@ -484,6 +494,22 @@
       if(d<best){best=d;closest=i;}
     }
     if(closest<0)return;
+    if(material==='wrap'){
+      // One tangible cavity per wrap blister: once popped it stays flattened.
+      const ix=Math.round(p.x*8),iy=Math.round(p.y*8);
+      if(!poppedCells.some(v=>v.ix===ix&&v.iy===iy)){
+        poppedCells.push({ix,iy});
+        if(poppedCells.length>20)poppedCells.shift();
+        addPopFX(p.x,p.y,.9);
+        feedback('pop',1);
+        tearHint.textContent='POP! · 已戳破 '+poppedCells.length+' 顆泡泡';
+      }else feedback('press',.3);
+    }else if(material==='bubble'){
+      if(bubbleBurst<.2){
+        bubbleBurst=1;addPopFX(p.x,p.y,1.5);feedback('pop',1);
+        tearHint.textContent='POP! · 泡泡消散後會重新鼓起';
+      }
+    }
     e.preventDefault();
     try{canvas.setPointerCapture(e.pointerId);}catch(_){}
     const k=closest*3;
@@ -494,7 +520,7 @@
       pressure:Math.max(.5,e.pressure||0),active:true
     };
     deformations.push(t);contacts.set(e.pointerId,t);
-    feedback('press',.55);
+    if(material!=='wrap'&&material!=='bubble')feedback('press',.55);
     while(deformations.length>8){
       let dead=deformations.findIndex(v=>!v.active);
       if(dead<0)dead=0;
@@ -524,7 +550,7 @@
   canvas.addEventListener('pointercancel',release);
   canvas.addEventListener('lostpointercapture',release);
   canvas.addEventListener('contextmenu',e=>e.preventDefault());
-  document.getElementById('reset').addEventListener('click',()=>{contacts.clear();deformations.length=0;tear=null;rejoinPulse=0;tearHint.classList.remove('torn');tearHint.textContent='STRETCH TO TEAR · 拉至極限可撕裂';updateStatus();});
+  document.getElementById('reset').addEventListener('click',()=>{contacts.clear();deformations.length=0;tear=null;rejoinPulse=0;imprints.length=0;poppedCells.length=0;popFx.length=0;bubbleBurst=0;neckTension=0;fractureCharge=0;tearHint.classList.remove('torn');tearHint.textContent=material==='bubble'?'PRESS TO POP · 輕碰泡泡':material==='wrap'?'POP THE CELLS · 逐顆戳破':material==='clay'?'PRESS TO SCULPT · 壓痕會保留':'STRETCH TO TEAR · 拉到極限會斷裂';feedback('reset');updateStatus();});
   [elasticity,viscosity].forEach(el=>el.addEventListener('input',()=>{
     document.getElementById(el===elasticity?'spring-value':'viscosity-value').textContent=String(el.value).padStart(2,'0');
   }));
@@ -639,6 +665,71 @@
       normals[i]/=len;normals[i+1]/=len;normals[i+2]/=len;
     }
   }
+
+  function drawEffects(frame){
+    fxctx.clearRect(0,0,viewW,viewH);
+    function pos(x,y){return{x:centerX+x*scale,y:centerY-y*scale};}
+    const color=getComputedStyle(document.documentElement).getPropertyValue('--chosen-color').trim()||'#EFB0BB';
+    fxctx.save();
+    // Elastic rice-fiber filaments become visible only when necking heavily.
+    if(!tear&&profiles[material].tear&&neckTension>.57){
+      const t=clamp((neckTension-.57)/.55,0,1);
+      const ax=neckAxisX,ay=neckAxisY,cx=neckCenterX,cy=neckCenterY;
+      for(let i=0;i<7;i++){
+        const offset=(i-3)*.030;
+        const A=pos(cx-ax*(.19+t*.11)-ay*offset,cy-ay*(.19+t*.11)+ax*offset);
+        const B=pos(cx+ax*(.19+t*.11)-ay*offset,cy+ay*(.19+t*.11)+ax*offset);
+        const C=pos(cx-ay*offset*.18,cy+ax*offset*.18);
+        fxctx.beginPath();fxctx.moveTo(A.x,A.y);
+        fxctx.quadraticCurveTo(C.x,C.y+(i%2?2:-2)*t,B.x,B.y);
+        fxctx.lineWidth=Math.max(.45,(2.8-i*.24)*(1-t*.3));
+        fxctx.strokeStyle='rgba(255,251,245,'+(t*.18)+')';
+        fxctx.stroke();
+      }
+    }
+    if(tear&&tear.age<25){
+      const fade=Math.max(0,1-tear.age/25),a=tear.pieces[0],b=tear.pieces[1];
+      const nx=tear.axisX,ny=tear.axisY;
+      const A=pos(a.x+nx*.25*a.size,a.y+ny*.25*a.size);
+      const B=pos(b.x-nx*.25*b.size,b.y-ny*.25*b.size);
+      for(let i=0;i<10;i++){
+        const transverse=(i-4.5)*(2+tear.force*1.3);
+        const stagger=Math.sin(i*4.1+tear.age*.16)*8*fade;
+        fxctx.beginPath();
+        fxctx.moveTo(A.x-ny*transverse,A.y+nx*transverse);
+        fxctx.bezierCurveTo(
+          A.x+(B.x-A.x)*.37-ny*(transverse+stagger),A.y+(B.y-A.y)*.34+nx*transverse,
+          A.x+(B.x-A.x)*.65+ny*(transverse*.7+stagger),A.y+(B.y-A.y)*.68-nx*transverse,
+          B.x-ny*transverse,B.y+nx*transverse);
+        fxctx.strokeStyle='rgba(254,244,247,'+(.62*fade)+')';
+        fxctx.lineWidth=(i%3===0?1.9:.9)*fade+0.2;
+        fxctx.stroke();
+      }
+      for(let i=0;i<17;i++){
+        const theta=(i*2.39996),radius=(tear.age*.7+8)*(i%5+2);
+        const midX=(A.x+B.x)*.5,midY=(A.y+B.y)*.5;
+        const x=midX+Math.cos(theta)*radius,y=midY+Math.sin(theta)*radius*.64;
+        fxctx.beginPath();fxctx.arc(x,y,Math.max(.1,(2.6-i%3)*fade),0,Math.PI*2);
+        fxctx.fillStyle='rgba(250,221,234,'+(.7*fade)+')';fxctx.fill();
+      }
+    }
+    // Material popping gives short-lived radial sparkles/bubble film ripples.
+    for(let i=popFx.length-1;i>=0;i--){
+      const p=popFx[i];p.age+=frame;
+      const fade=Math.max(0,1-p.age/27);
+      if(fade===0){popFx.splice(i,1);continue;}
+      const v=pos(p.x,p.y),radius=(6+p.age*2.6)*p.strength;
+      fxctx.beginPath();fxctx.arc(v.x,v.y,radius,0,Math.PI*2);
+      fxctx.lineWidth=1.5*fade;
+      fxctx.strokeStyle='rgba(255,255,255,'+(.65*fade)+')';fxctx.stroke();
+      for(let n=0;n<9;n++){
+        const theta=n*2.39996,px=v.x+Math.cos(theta)*radius*.8,py=v.y+Math.sin(theta)*radius*.8;
+        fxctx.beginPath();fxctx.arc(px,py,1.9*fade,0,Math.PI*2);
+        fxctx.fillStyle='rgba(220,162,191,'+(.85*fade)+')';fxctx.fill();
+      }
+    }
+    fxctx.restore();
+  }
   function uploadDraw(piece){
     deform(piece);
     pressUniform.fill(0);
@@ -697,6 +788,7 @@
       width=1+Math.min(.35,deformations.reduce((m,t)=>m+Math.abs(t.dx),0)*.11);
     }
     shadow.style.transform='translate(-50%,-50%) scaleX('+width+')';
+    drawEffects(frame);
     requestAnimationFrame(render);
   }
   window.addEventListener('resize',resize,{passive:true});
