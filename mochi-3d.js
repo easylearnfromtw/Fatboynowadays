@@ -298,95 +298,132 @@
   let tear=null;
   let rejoinPulse=0;
   const tearHint=document.getElementById('tear-hint');
-  function splitGesture(){
-    if(tear||contacts.size===0)return;
-    const arr=Array.from(contacts.values());
-    const E=Number(elasticity.value);
-    let ax=1,ay=0,excess=0,cx=0,cy=0;
-    const limit=.76+E*.082;
-    if(arr.length>=2){
-      let first=null,second=null,largest=0;
-      for(let i=0;i<arr.length;i++)for(let j=i+1;j<arr.length;j++){
-        const a=arr[i],b=arr[j];
-        const nowDist=Math.hypot(a.x-b.x,a.y-b.y);
-        const startDist=Math.hypot(a.startX-b.startX,a.startY-b.startY);
-        const growth=nowDist-startDist;
-        if(growth>largest){largest=growth;first=a;second=b;}
-      }
-      if(!first||largest<limit)return;
-      const dx=second.x-first.x,dy=second.y-first.y;
-      const dist=Math.hypot(dx,dy)||1;
-      ax=dx/dist;ay=dy/dist;
-      cx=clamp((first.x+second.x)*.5,-.4,.4);
-      cy=clamp((first.y+second.y)*.5,-.38,.38);
-      excess=largest;
-    }else{
-      const t=arr[0],dx=t.x-t.startX,dy=t.y-t.startY;
-      const len=Math.hypot(dx,dy);
-      if(len<limit*1.54)return;
-      ax=dx/len;ay=dy/len;excess=len;
+  let neckTension=0,neckAxisX=1,neckAxisY=0,neckCenterX=0,neckCenterY=0;
+  let fractureCharge=0,snapEnergy=0,breakTime=0;
+  function splitGesture(frame){
+    if(tear||!profiles[material].tear||contacts.size===0){
+      neckTension=Math.max(0,neckTension-.07*frame);
+      fractureCharge=Math.max(0,fractureCharge-.09*frame);
+      return;
     }
-    const opening=clamp(1.42+(excess-limit)*.32,1.44,2.10);
-    tear={
-      axisX:ax,axisY:ay,
-      pieces:[
-        {index:0,x:cx-ax*opening*.5,y:cy-ay*opening*.5,vx:-ax*.02,vy:-ay*.02},
-        {index:1,x:cx+ax*opening*.5,y:cy+ay*opening*.5,vx:ax*.02,vy:ay*.02}
-      ],
-      cooldown:18
-    };
+    const arr=Array.from(contacts.values());
+    let ax=1,ay=0,cx=0,cy=0,growth=0,asymmetry=0,speed=0;
+    if(arr.length>=2){
+      let first=null,second=null,best=-Infinity;
+      for(let i=0;i<arr.length;i++)for(let j=i+1;j<arr.length;j++){
+        const p=arr[i],q=arr[j];
+        const delta=Math.hypot(p.x-q.x,p.y-q.y)-Math.hypot(p.startX-q.startX,p.startY-q.startY);
+        if(delta>best){best=delta;first=p;second=q;}
+      }
+      if(first&&second){
+        growth=Math.max(0,best);
+        const dx=second.x-first.x,dy=second.y-first.y,l=Math.hypot(dx,dy)||1;
+        ax=dx/l;ay=dy/l;
+        cx=clamp((first.anchorX+second.anchorX)*.25,-.34,.34);
+        cy=clamp((first.anchorY+second.anchorY)*.25,-.34,.34);
+        const fmove=Math.hypot(first.x-first.startX,first.y-first.startY);
+        const smove=Math.hypot(second.x-second.startX,second.y-second.startY);
+        asymmetry=clamp((fmove-smove)/(fmove+smove+.04),-.96,.96);
+        speed=Math.hypot(first.speedX||0,first.speedY||0)+Math.hypot(second.speedX||0,second.speedY||0);
+      }
+    }else{
+      const p=arr[0],dx=p.x-p.startX,dy=p.y-p.startY,l=Math.hypot(dx,dy);
+      growth=l*.70;
+      if(l>.001){ax=dx/l;ay=dy/l;}
+      asymmetry=clamp((p.anchorX*ax+p.anchorY*ay)*.52,-.8,.8);
+      speed=Math.hypot(p.speedX||0,p.speedY||0);
+    }
+    const threshold=(.76+Number(elasticity.value)*.082)*profiles[material].limit;
+    const strain=clamp(growth/Math.max(threshold,.12),0,2.15);
+    neckTension+=clamp(strain-neckTension,-.045*frame,.16*frame);
+    neckAxisX=ax;neckAxisY=ay;neckCenterX=cx;neckCenterY=cy;
+    if(strain>.31&&Math.random()<.20*frame)feedback('stretch',strain*.60);
+    if(strain>1){
+      fractureCharge+=((strain-1)*.68+.075)*frame;
+    }else fractureCharge=Math.max(0,fractureCharge-.15*frame);
+    // A small yield interval reveals the neck thinning before fracture.
+    if(fractureCharge<.42)return;
+    const force=clamp((strain-1)*.83+speed*.32+fractureCharge*.38,0,1);
+    const cutRatio=clamp(.5+asymmetry*(.12+force*.23),.23,.77);
+    const smallVolume=cutRatio,largeVolume=1-cutRatio;
+    const sizes=[.70*Math.cbrt(smallVolume/.5),.70*Math.cbrt(largeVolume/.5)];
+    const opening=clamp(1.38+(strain-1)*.39,1.38,2.40);
+    const shove=.075+force*.115;
+    const pieces=[
+      {index:0,x:cx-ax*opening*.5,y:cy-ay*opening*.5,
+       vx:-ax*shove,vy:-ay*shove,size:sizes[0],
+       wobble:1.0+force*.8,phase:1.3,returnDelay:30},
+      {index:1,x:cx+ax*opening*.5,y:cy+ay*opening*.5,
+       vx:ax*shove,vy:ay*shove,size:sizes[1],
+       wobble:1.0+force*.8,phase:3.0,returnDelay:30}
+    ];
+    tear={axisX:ax,axisY:ay,pieces:pieces,cooldown:36,age:0,force:force};
     for(const t of arr){
-      const projection=(t.x-cx)*ax+(t.y-cy)*ay;
-      const piece=projection<0?tear.pieces[0]:tear.pieces[1];
-      t.piece=piece.index;
-      t.holdX=t.x-piece.x;t.holdY=t.y-piece.y;
+      const sign=(t.x-cx)*ax+(t.y-cy)*ay;
+      const p=pieces[sign<0?0:1];
+      t.piece=p.index;
+      t.holdX=t.x-p.x;t.holdY=t.y-p.y;
       t.dx=0;t.dy=0;t.vx=0;t.vy=0;
     }
-    tearHint.textContent='MATERIAL SEPARATED · 靠近會重新黏合';
+    snapEnergy=1;breakTime=performance.now();
+    neckTension=0;fractureCharge=0;
+    feedback('tear',.7+force*.3);
+    tearHint.textContent='SNAP! · 斷裂回彈中，放開後會慢慢游回';
     tearHint.classList.add('torn');
     updateStatus();
   }
   function advancePieces(frame){
     if(!tear)return;
     const pieces=tear.pieces;
+    tear.age+=frame;
     const midX=(pieces[0].x+pieces[1].x)*.5;
     const midY=(pieces[0].y+pieces[1].y)*.5;
     for(const p of pieces){
+      p.wobble*=Math.pow(.935,frame);
+      p.phase+=frame*.19;
       const gripping=Array.from(contacts.values()).filter(t=>t.piece===p.index);
       let goalX,goalY;
       if(gripping.length){
         goalX=gripping.reduce((a,t)=>a+t.x-t.holdX,0)/gripping.length;
         goalY=gripping.reduce((a,t)=>a+t.y-t.holdY,0)/gripping.length;
       }else{
+        p.returnDelay=Math.max(0,p.returnDelay-frame);
+        // Pause while recoiling, then slowly swim toward the other half.
         const sign=p.index===0?-1:1;
-        const other=pieces[1-p.index];
-        // Released portions retain inertia, then approach each other like
-        // tacky rice dough until they contact and permanently fuse.
-        const attract=contacts.size?1:.2;
-        const bondX=other.x+tear.axisX*sign*.85;
-        const bondY=other.y+tear.axisY*sign*.85;
-        goalX=bondX*attract+(midX+tear.axisX*sign*.41)*(1-attract);
-        goalY=bondY*attract+(midY+tear.axisY*sign*.41)*(1-attract);
+        const holdDist=(p.size+pieces[1-p.index].size)*.63;
+        const targetX=midX+tear.axisX*sign*holdDist*.5;
+        const targetY=midY+tear.axisY*sign*holdDist*.5;
+        const drift=p.returnDelay>0?0:(contacts.size?.018:.008);
+        p.vx+=(targetX-p.x)*drift*frame;
+        p.vy+=(targetY-p.y)*drift*frame;
+        const undulate=p.returnDelay>0?.002:.006;
+        p.vx+=-tear.axisY*Math.sin(p.phase*.46)*undulate*frame;
+        p.vy+=tear.axisX*Math.sin(p.phase*.46)*undulate*frame;
+        const drag=Math.pow(p.returnDelay>0?.94:.955,frame);
+        p.vx*=drag;p.vy*=drag;
+        p.x=clamp(p.x+p.vx*frame,-3.5,3.5);
+        p.y=clamp(p.y+p.vy*frame,-3.0,3.0);
+        continue;
       }
-      const V=Number(viscosity.value);
-      const stiffness=gripping.length?.14:.032+Number(elasticity.value)*.004;
-      const damp=gripping.length?.75:.90-V*.01;
-      p.vx=(p.vx+(goalX-p.x)*stiffness*frame)*Math.pow(damp,frame);
-      p.vy=(p.vy+(goalY-p.y)*stiffness*frame)*Math.pow(damp,frame);
+      const damp=Math.pow(.68,frame),gain=.18;
+      p.vx=(p.vx+(goalX-p.x)*gain*frame)*damp;
+      p.vy=(p.vy+(goalY-p.y)*gain*frame)*damp;
       p.x=clamp(p.x+p.vx*frame,-3.5,3.5);
       p.y=clamp(p.y+p.vy*frame,-3.0,3.0);
     }
     tear.cooldown=Math.max(0,tear.cooldown-frame);
-    const d=Math.hypot(pieces[1].x-pieces[0].x,pieces[1].y-pieces[0].y);
-    if(tear.cooldown===0&&d<1.18){
-      tear=null;rejoinPulse=1;
-      contacts.clear();deformations.length=0;
+    const dist=Math.hypot(pieces[1].x-pieces[0].x,pieces[1].y-pieces[0].y);
+    const joinLimit=(pieces[0].size+pieces[1].size)*.82;
+    if(tear.cooldown<=0&&dist<joinLimit){
+      tear=null;rejoinPulse=1;contacts.clear();deformations.length=0;
+      feedback('rejoin');
       tearHint.classList.remove('torn');
-      tearHint.textContent='BONDED AGAIN · 再拉長就能撕開';
+      tearHint.textContent='BONDED AGAIN · 黏合完成';
       updateStatus();
+    }else if(tear.age>42&&contacts.size===0){
+      tearHint.textContent='SELF-HEALING · 正在慢慢游回彼此';
     }
   }
-
   function resize(){
     viewW=window.innerWidth;viewH=window.innerHeight;
     dpr=Math.min(window.devicePixelRatio||1,2);
@@ -435,6 +472,7 @@
         dx:0,dy:0,vx:0,vy:0,depth:.05,depthVelocity:.07,
         pressure:Math.max(.5,e.pressure||0),active:true};
       deformations.push(t);contacts.set(e.pointerId,t);
+      feedback('press',.5);
       updateStatus();return;
     }
     let closest=-1,best=.22*.22;
@@ -456,6 +494,7 @@
       pressure:Math.max(.5,e.pressure||0),active:true
     };
     deformations.push(t);contacts.set(e.pointerId,t);
+    feedback('press',.55);
     while(deformations.length>8){
       let dead=deformations.findIndex(v=>!v.active);
       if(dead<0)dead=0;
@@ -465,11 +504,16 @@
   }
   function drag(e){
     const t=contacts.get(e.pointerId);if(!t)return;
-    e.preventDefault();const p=world(e);t.x=p.x;t.y=p.y;
+    e.preventDefault();const p=world(e);t.speedX=p.x-t.x;t.speedY=p.y-t.y;t.x=p.x;t.y=p.y;
+    if(material==='crunch'&&(Math.abs(t.speedX)+Math.abs(t.speedY))>.09)feedback('stretch',.75);
     if(e.pressure>0)t.pressure=e.pressure;
   }
   function release(e){
     const t=contacts.get(e.pointerId);if(!t)return;
+    if(material==='clay'&&t.piece===undefined){
+      imprints.push({x:t.anchorX+t.dx*.70,y:t.anchorY+t.dy*.70,depth:Math.min(1,Math.max(.45,t.depth))});
+      if(imprints.length>15)imprints.shift();
+    }
     t.active=false;contacts.delete(e.pointerId);
     try{canvas.releasePointerCapture(e.pointerId);}catch(_){}
     updateStatus();
@@ -485,12 +529,13 @@
     document.getElementById(el===elasticity?'spring-value':'viscosity-value').textContent=String(el.value).padStart(2,'0');
   }));
   function step(factor){
-    splitGesture();
+    splitGesture(factor);
     advancePieces(factor);
     rejoinPulse*=Math.pow(.93,factor);
     if(rejoinPulse<.001)rejoinPulse=0;
     const E=Number(elasticity.value),V=Number(viscosity.value);
-    const returning=.025+E*.006,resistance=clamp(.94-V*.024,.66,.94);
+    const prof=profiles[material];
+    const returning=(.025+E*.006)*prof.spring,resistance=clamp((.94-V*.024)*prof.viscosity,.60,.97);
     for(let i=deformations.length-1;i>=0;i--){
       const t=deformations[i];
       const xGoal=t.active?clamp(t.x-t.startX,-1.65,1.65):0;
@@ -515,11 +560,13 @@
       const k=i*3,x0=original[k],y0=original[k+1],z0=original[k+2];
       let x=x0,y=y0,z=z0;
       if(piece){
-        // Actual separate closed mesh with independent position and orientation.
-        const X=x0*.60,Y=y0*.88;
+        // Force-dependent fragment volume and damped recoil wobble.
+        const sx=piece.size*(1+piece.wobble*Math.sin(piece.phase)*.13);
+        const sy=piece.size*(1-piece.wobble*Math.sin(piece.phase)*.095);
+        const X=x0*sx,Y=y0*sy;
         x=piece.x+X*tear.axisX-Y*tear.axisY;
         y=piece.y+X*tear.axisY+Y*tear.axisX;
-        z=z0*.84;
+        z=z0*piece.size*(1-piece.wobble*Math.sin(piece.phase)*.09);
         const front=clamp((z0+.08)/.43,0,1);
         for(const t of deformations){
           if(t.piece!==piece.index)continue;
@@ -531,11 +578,37 @@
         positions[k]=x;positions[k+1]=y;positions[k+2]=z;
         continue;
       }
+      if(bubbleBurst>0){
+        const t=1-bubbleBurst;
+        const factor=1-.73*Math.sin(t*Math.PI);
+        x*=factor;y*=factor;z*=factor;
+      }
       if(rejoinPulse>0){
         x*=1+rejoinPulse*.15;
         y*=1-rejoinPulse*.12;
       }
       const front=clamp((z0+.08)/.43,0,1);
+      // Pulling opposing fingers stretches the body and creates a thin neck
+      // before the two solids separate. This is continuously strain-dependent.
+      if(neckTension>.18){
+        const ax=neckAxisX,ay=neckAxisY;
+        const along=(x-neckCenterX)*ax+(y-neckCenterY)*ay;
+        const across=-(x-neckCenterX)*ay+(y-neckCenterY)*ax;
+        const strain=clamp((neckTension-.16)/1.10,0,1);
+        const pinch=Math.exp(-Math.pow(along/.32,2));
+        const thinning=(.77*strain*strain)*pinch;
+        x-=(-across*ay)*thinning;
+        y-=(across*ax)*thinning;
+        x+=along*ax*strain*.24;
+        y+=along*ay*strain*.24;
+        z-=Math.abs(z)*thinning*.42;
+      }
+      if(material==='clay'){
+        for(const mark of imprints){
+          const dd=(x-mark.x)*(x-mark.x)+(y-mark.y)*(y-mark.y);
+          z-=front*.22*mark.depth*Math.exp(-dd/(2*.20*.20));
+        }
+      }
       for(let j=0;j<deformations.length;j++){
         const t=deformations[j],ox=x0-t.anchorX,oy=y0-t.anchorY,d2=ox*ox+oy*oy;
         const grip=Math.exp(-d2/(2*.50*.50)),volumeGrip=.28+.72*front;
@@ -544,7 +617,7 @@
         const dist=Math.sqrt(d2),contact=Math.exp(-d2/(2*.265*.265));
         const lip=Math.exp(-Math.pow((dist-.38)/.135,2));
         const depth=clamp(t.depth,0,1.25),cap=clamp(z0*.78+.07,.10,.49);
-        z+=front*depth*(-cap*contact+.067*lip);
+        z+=front*depth*profiles[material].press*(-cap*contact+.067*lip);
         x+=ox*front*depth*.050*Math.exp(-d2/(2*.43*.43));
         y+=oy*front*depth*.050*Math.exp(-d2/(2*.43*.43));
       }
@@ -580,6 +653,14 @@
       pressUniform[n*4+2]=d;
       pressUniform[n*4+3]=piece?.22:.285;n++;
     }
+    if(!piece&&material==='clay'){
+      for(const mark of imprints){
+        if(n>=8)break;
+        pressUniform[n*4]=mark.x;pressUniform[n*4+1]=mark.y;
+        pressUniform[n*4+2]=mark.depth*.65;pressUniform[n*4+3]=.24;
+        n++;
+      }
+    }
     gl.uniform4fv(uni.press,pressUniform);
     poppedUniform.fill(0);
     for(let i=0;i<Math.min(20,poppedCells.length);i++){
@@ -598,6 +679,8 @@
   function render(now){
     const frame=lastTime?clamp((now-lastTime)/16.667,.5,2):1;
     lastTime=now;time=now;step(frame);
+    if(bubbleBurst>0)bubbleBurst=Math.max(0,bubbleBurst-.026*frame);
+    snapEnergy*=Math.pow(.85,frame);
     gl.clearColor(0,0,0,0);
     gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
     if(tear){
