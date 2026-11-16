@@ -206,6 +206,7 @@ function capture(){
     const nominalR=Math.min(sw*(sw<650?.355:.26),sh*(sw<650?.24:.29),286);
     const s=350/nominalR,cx=sw*.5,cy=sh*(sh<620?.52:(sw<650?.495:.525));
     c.drawImage(source,540-cx*s,660-cy*s,sw*s,sh*s);
+    const particles=$("fx-layer");if(particles)c.drawImage(particles,540-cx*s,660-cy*s,sw*s,sh*s);
     c.fillStyle='#605062';c.font='700 22px sans-serif';c.fillText('SOFT MATTER STUDIO',82,90);
     c.fillStyle='#ae98ae';c.font='16px sans-serif';c.fillText('TACTILE EXPERIMENT / 002',82,120);
     c.fillStyle='#735c70';c.font='italic 112px Georgia,serif';c.fillText('mochi.',76,1148);
